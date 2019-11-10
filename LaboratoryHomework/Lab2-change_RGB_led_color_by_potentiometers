@@ -1,0 +1,31 @@
+#define WRITE false
+#define TOTAL_IO_PINS 3// total input-output pins
+const int inputPin[TOTAL_IO_PINS] = {A0, A1, A2};
+const int outputPin[TOTAL_IO_PINS] = {9, 10, 11};
+int currentPin; // read and update the value for a specific input related output
+                // <=> read the potentiometer and update the ledbrightness
+int inputValue, outputValue;
+void setup() {
+  for (currentPin = 0; currentPin < TOTAL_IO_PINS; ++currentPin) {
+    pinMode (inputPin[currentPin], INPUT);
+    pinMode (outputPin[currentPin], OUTPUT);
+  }
+  currentPin = 0;
+  if (WRITE == true) {
+    Serial.begin(9600);
+  }
+}
+
+void update(int pin) {
+  inputValue = analogRead(inputPin[pin]);
+  outputValue = map(inputValue, 0, 1023, 0, 255);
+  analogWrite (outputPin[pin], outputValue);
+  if (WRITE == true) {
+    Serial.println (outputValue);
+  }
+}
+
+void loop() {
+  update (currentPin);
+  currentPin = (currentPin + 1) % TOTAL_IO_PINS;
+}
