@@ -35,7 +35,7 @@ void setup() {
   pinMode (passiveBuzzerPin, INPUT);
   pinMode (activeBuzzerPin, OUTPUT);
   digitalWrite (ledPin,HIGH);
-  Serial.println (analogRead (passiveBuzzerPin));
+  //Serial.println (analogRead (passiveBuzzerPin));
 }
 
 void playMusic()
@@ -58,7 +58,7 @@ void playMusic()
 void stopMusicListener() // checks if the music should be stopped
 {
   newReadState = !digitalRead (buttonPin);
-  Serial.println (newReadState);
+  //Serial.println (newReadState);
   if (lastReadState != newReadState) {
     lastChange = millis();
     lastReadState = newReadState;
