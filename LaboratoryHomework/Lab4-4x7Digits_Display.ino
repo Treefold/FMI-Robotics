@@ -55,6 +55,6 @@ void loop() {
     readX = analogRead(pinVRx);
     if (readX > 700 && updatedX != 1) {digitalWrite(pinD1 + currDig, HIGH); if (currDig == 3){currDig = 0;}else{++currDig;}digitalWrite(pinD1 + currDig, LOW);printNumber(currentNr[currDig]);updatedX = 1;}
     if (readX < 300 && updatedX != 2) {digitalWrite(pinD1 + currDig, HIGH); if (currDig == 0){currDig = 3;}else{--currDig;}digitalWrite(pinD1 + currDig, LOW);printNumber(currentNr[currDig]);updatedX = 2;}
-    if (400 <= readX && readX <= 600) {updatedX = 0;}
+    if (400 <= readX && readX <= 600) {                                                                                                                                                       updatedX = 0;}
   }
 }
