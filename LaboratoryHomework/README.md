@@ -6,6 +6,6 @@ Lab3-knockBuzzerDetector - using a passive buzzer detect a knock and after 5 sec
 
 Lab4-4x7Digits_Display - using a joystick change the digits from a 4 7Digits display: (2 states)
                               
-                              - Locked   (change the current digit value by going up and down)
-                              - UnLocked (change the current digit       by going left and right)
+                              -   Locked - DP not blinking (change the current digit value by going up   and down)
+                              - UnLocked - DP     blinking (change the current digit       by going left and right)
                               * press the joystick to change between states
