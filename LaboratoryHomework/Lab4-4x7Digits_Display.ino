@@ -17,13 +17,15 @@ enum: uint8_t
   pinVRy = A1,
   pinSW  = A2
 };
-const uint8_t showtime = 2;
+const uint8_t showtime = 1, showTimeDP = 100;
 const uint8_t number[10] = {0x3F, 0x06, 0x5B, 0x4F, 0x64, 0x6D, 0x7D, 0x07, 0x7F, 0x6F};
 uint8_t currentNr[4] = {0, 0, 0, 0}, currDig = 0;
+bool btnState = false;
 void printNumber (uint8_t nr) {
   for (int pin = pinA; pin < pinDP; ++pin) {
     digitalWrite (pin, number[nr] & (1 << (pin - pinA)));
   }
+  digitalWrite (pinDP, LOW);
 }
 void setup() {
   // put your setup code here, to run once:
@@ -36,7 +38,7 @@ void listener() {
   //updateNr();
   static uint16_t readX, readY;
   static uint8_t  updatedX = 0, updatedY = 0;
-  static bool     btnState = false, lastBtnState = 1;
+  static bool     lastBtnState = 1;
   if (digitalRead(pinSW) != lastBtnState) {
     if (lastBtnState) {btnState = !btnState;}
     lastBtnState = !lastBtnState;
@@ -61,7 +63,7 @@ void listener() {
   
 }
 void show() {
-  static uint8_t currShowDig = 3;
+  static uint8_t currShowDig = 3, showtimeDP = showTimeDP / 2, lastDig = 0;
   static uint64_t lastTime = millis();
   if (lastTime + showtime < millis())
   {
@@ -69,7 +71,26 @@ void show() {
     currShowDig = (currShowDig + 1) % 4;
     digitalWrite (pinD1 + currShowDig, LOW);
     printNumber(currentNr[currShowDig]);
-    digitalWrite (pinDP, currShowDig == currDig);
+    if (btnState) {
+        //Serial.print (currShowDig);
+        //Serial.println (currDig);
+      digitalWrite (pinDP, currShowDig == currDig);
+    }
+    else {
+      if (currShowDig == currDig) {
+        //Serial.print (currShowDig);
+        //Serial.println (currDig);
+        //if (lastDig != currDig) {
+          digitalWrite (pinDP, (showtimeDP <= showTimeDP / 2) ? LOW : HIGH);
+          if (showtimeDP == 0) {showtimeDP = showTimeDP;}
+          else                 {--showtimeDP;}
+        /*}
+        else {
+          lastDig = currDig;
+          showtimeDP = showTimeDP / 2;
+        }//*/
+      }
+    }
     lastTime = millis();
   }
 }
