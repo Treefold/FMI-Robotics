@@ -102,7 +102,7 @@ enum MeniuState: uint8_t {
 } meniuState = MS_Start;
 
 HS_TYPE score = 0;
-uint8_t lives = 0, 
+uint8_t lives = 3, 
         level = 5;
 
 const char     endMsg[]       = "Congratulation, you finished the game. Press button to restart";
@@ -292,7 +292,9 @@ void loop() {
       gameState  = GS_EndGame;
     }
     lcd.setCursor (0, 0);
-    lcd.print ("Lvl: ");
+    lcd.print ("Lives: ");
+    lcd.print (lives);
+    lcd.print (" Lvl: ");
     lcd.print (level);
     lcd.setCursor (0, 1);
     lcd.print ("Score: ");
