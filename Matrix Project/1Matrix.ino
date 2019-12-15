@@ -5,17 +5,24 @@
 #define ROWS    8
 #define COLS    8
 #define MAX_LVL 10
+#define MAX_BRI 14
 
 static const uint8_t matrix_csPin  = 10;
 static const uint8_t matrix_clkPin = 11;
 static const uint8_t matrix_dinPin = 12;
 static const uint8_t matrixNo      = 1;
 static LedControl    lc            = LedControl(matrix_dinPin, matrix_clkPin, matrix_csPin, matrixNo); //DIN, CLK, LOAD, No. DRIVER
+uint8_t Matrix_brightness = 5;
 
 void Matrix_Init () {
-  lc.setIntensity(0, 2); // sets brightness (0~15 possible values)
+  lc.setIntensity(0, Matrix_brightness); // sets brightness (0~14 possible values)
   lc.clearDisplay(0); // clear screen
   lc.shutdown(0, false); // turn off power saving, enables display
+}
+
+void Matrix_UpdateBrightness ()
+{
+  lc.setIntensity(0, Matrix_brightness); // sets brightness (0~14 possible values)
 }
 
 static void Print (uint8_t mat[COLS], uint8_t firstCol) {
@@ -153,7 +160,7 @@ void Matrix_InGame() {
     Print (cols, head);
     // update matrix
     if (head % obsDist == 0) {
-      score = sc += (remTime * 100.0) / nextObsToNextLvl[level] / nextMoveDebounce[level];
+      score = sc += ((cols[head] != (1 << playerPos)) * remTime * 100.0) / nextObsToNextLvl[level] / nextMoveDebounce[level];
       Serial.println(score);
       if (obsToNextLvl > 1) {obsToNextLvl--;}
       else {
