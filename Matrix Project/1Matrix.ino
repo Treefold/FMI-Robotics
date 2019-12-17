@@ -20,8 +20,7 @@ void Matrix_Init () {
   lc.shutdown(0, false); // turn off power saving, enables display
 }
 
-void Matrix_UpdateBrightness ()
-{
+void Matrix_UpdateBrightness () {
   lc.setIntensity(0, Matrix_brightness); // sets brightness (0~14 possible values)
 }
 
@@ -118,6 +117,7 @@ static uint8_t        cols[COLS],   // matrix kept as a circular list of columns
                       obsToNextLvl; // current number of obstacles to pass to advance to the next level
 static uint64_t       now,          // the current time
                       nextMove;     // the time when the matrix has to refresh
+HS_TYPE               score = 0;    // the current score
 uint8_t               lives,        // number of remaining lives (no more than 9)
                       level = 0;    // current level
 float                 remTime,      // the remaining time to finish the current level
@@ -133,6 +133,7 @@ void Matrix_GameSetup ()
   head         = 0;
   lives        = 3;
   playerPos    = 4;
+  score        = 0;
   sc           = 0;
   obsToNextLvl = nextObsToNextLvl[level];
   remTime      = timeToFinishLvl [level];

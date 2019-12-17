@@ -3,12 +3,12 @@
 #define LCD_ROWS 2
 #define LCD_COLS 16
 
-const uint8_t lcd_rsPin     = 7;
-const uint8_t lcd_enablePin = 6;
-const uint8_t lcd_d4Pin     = 5;
-const uint8_t lcd_d5Pin     = 4;
-const uint8_t lcd_d6Pin     = 3;
-const uint8_t lcd_d7Pin     = 2;
+const uint8_t lcd_rsPin     = 9;
+const uint8_t lcd_enablePin = 8;
+const uint8_t lcd_d4Pin     = 7;
+const uint8_t lcd_d5Pin     = 6;
+const uint8_t lcd_d6Pin     = 5;
+const uint8_t lcd_d7Pin     = 4;
 LiquidCrystal lcd (lcd_rsPin, lcd_enablePin, lcd_d4Pin, lcd_d5Pin, lcd_d6Pin, lcd_d7Pin);
 
 bool           lastBtnValue = !Js_btnPressed,
@@ -199,45 +199,52 @@ void Lcd_Meniu() {
       }
       break;
     case MS_Hs:
+      static uint8_t rank = 0;
+      char   nameHS[NAME_LEN];
       lcd.setCursor (0, 0);
-      lcd.print (">HS:            ");
-      lcd.setCursor (5, 0);
-      lcd.print (HS_Read());
-      lcd.print ("-");
-      Lcd_printString (HS_Name);
+      lcd.print ((lockedMeniu) ? ">Press To UnLock" : ">Press To Lock  ");
       lcd.setCursor (0, 1);
+      lcd.print ("HS");
+      lcd.print (rank + 1);
+      lcd.print (":           ");
+      lcd.setCursor (5, 1);
+      lcd.print (HS_Read(rank));
+      lcd.print ("-");
+      NAME_Read(nameHS, rank);
+      Lcd_printString (nameHS);
+
       if (Js_btnIsPressed()) {
         if (lastBtnValue == !Js_btnPressed) {
-          startCountDown = millis();
-          lastBtnValue   = Js_btnPressed;
-          lockedMeniu    = true;
-          lcd.print (">Reset in 3      ");
-          break;
-        }
-        if (millis() > startCountDown + 3000) {
-          strcpy (HS_Name, "Not Set");
-          HS_Update (0, HS_Name, true);
-          lcd.print (">Done           ");
-        }
-        else {
-          lcd.setCursor (10, 1);
-          if (millis() > startCountDown + 2000) {
-            lcd.print (1);
-          }
-          else {
-            if (millis() > startCountDown + 1000) {
-              lcd.print (2);
-            }
-          }
+          lockedMeniu  = !lockedMeniu;
+          lastBtnValue = Js_btnPressed;
         }
       }
       else {
-        lcd.print ("Hold to reset HS");
-        lockedMeniu = false;
         lastBtnValue = !Js_btnPressed;
       }
+      if (lockedMeniu) {
+        Js_ReadY ();
+        if (Js_vryValue > Js_DownPoint) {
+          if (lastVryValue != Js_DownPoint) {
+            if (rank < HS_NO - 1) {++rank;}
+            lastVryValue = Js_DownPoint;
+          }
+        }
+        else {
+          if (Js_vryValue < Js_UpPoint) {
+            if (lastVryValue != Js_UpPoint) {
+              if (rank > 0) {--rank;}
+              lastVryValue = Js_UpPoint;
+            }
+          }
+          else {
+            lastVryValue = Js_NoPoint;
+          }
+        }
+      }
+      
       break;
-    case MS_InfoCreator: //= ===================================================================================================================================
+    case MS_InfoCreator:
       lcd.setCursor (0, 0);
       lcd.print ("Creator:  Surcea");
       lcd.setCursor (0, 1);
@@ -278,7 +285,7 @@ void Lcd_EndGame() {
   if (Js_btnIsPressed()) {
     if (!waitBtnRls) {
       waitBtnRls = true;
-      if (score > HS_Read()) {
+      if (score > HS_Read(HS_NO - 1)) { // last rank
         saveName   = false;
         gameState  = GS_Hs;
       }
@@ -322,8 +329,8 @@ void Lcd_HsMeniu() {
           return;
         }
         else {
-          strcpy (HS_Name, "UnKnown");
-          HS_Update (score, HS_Name, true);
+          strcpy (name, "UnKnown");
+          HS_Update (score, name);
           gameState  = GS_Meniu;
           meniuState = MS_Start;
           saveName   = false;
@@ -388,8 +395,7 @@ void Lcd_HsSaveName() {
         lastBtnValue   = Js_btnPressed;
       }
       if (millis() > startCountDown + 3000) {
-        strcpy (HS_Name, name);
-        HS_Update (score, HS_Name, true);
+        HS_Update (score, name);
         gameState   = GS_Meniu;
         meniuState  = MS_Start;
         saveName    = false;

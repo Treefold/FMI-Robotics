@@ -1,5 +1,7 @@
 // Game states and meniu states can be change anywhere
 
+#define PAUSE_PIN 2
+
 enum GameStates : uint8_t { // GS
   GS_Meniu,
   GS_InGame,
@@ -20,3 +22,5 @@ enum MeniuState : uint8_t {
   MS_InfoRobotics,
   MS_LastState   // link to the next of the first state
 } meniuState = MS_Start;
+
+void Pause() {delay(1);} // creates an infinite loop of waiting

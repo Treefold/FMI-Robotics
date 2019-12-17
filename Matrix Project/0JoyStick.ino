@@ -19,6 +19,7 @@ void Js_Init() {
 void Js_ReadX () {
   Js_vrxValue = analogRead (Js_vrxPin);
 }
+
 void Js_ReadY () {
   Js_vryValue = analogRead (Js_vryPin);
 }
