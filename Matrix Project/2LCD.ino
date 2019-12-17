@@ -11,13 +11,13 @@ const uint8_t lcd_d6Pin     = 5;
 const uint8_t lcd_d7Pin     = 4;
 LiquidCrystal lcd (lcd_rsPin, lcd_enablePin, lcd_d4Pin, lcd_d5Pin, lcd_d6Pin, lcd_d7Pin);
 
-bool           lastBtnValue = !Js_btnPressed,
-               lockedMeniu  = false, //
-               saveName     = false,
-               waitBtnRls   = false;
+bool           lastBtnValue   = !Js_btnPressed,
+               lockedMeniu    = false, //
+               saveName       = false,
+               waitBtnRls     = false;
 uint16_t       currMsgBit,
-               lastVrxValue = 512,
-               lastVryValue = 512;
+               lastVrxValue   = 512,
+               lastVryValue   = 512;
 const char     endMsg[]       = "Congratulation, you have just died! Press button to continue";
 char           name[NAME_LEN] = "       ";
 int8_t         currLet        = 0;
@@ -110,8 +110,8 @@ void Lcd_Meniu() {
         }
       }
       else {
-        waitBtnRls = false;
         lcd.print (">Press to start ");
+        waitBtnRls   = false;
         lockedMeniu  = false;
         lastBtnValue = !Js_btnPressed;
       }
@@ -264,6 +264,7 @@ void Lcd_Meniu() {
       break;
     case MS_LastState:  meniuState = (MeniuState) ((int) MS_FirstState + 1); break;
     case MS_FirstState: meniuState = (MeniuState) ((int) MS_LastState  - 1); break;
+    default:            meniuState = (MeniuState) ((int) MS_FirstState + 1); break; 
   }
 }
 
@@ -352,7 +353,7 @@ void Lcd_HsMeniu() {
     }
   }
   else {
-    waitBtnRls = false;
+    waitBtnRls   = false;
     lastBtnValue = !Js_btnPressed;
   }
   lcd.print ((saveName) ? "Set Name: Yes > " : "Set Name: < No  ");
@@ -400,7 +401,7 @@ void Lcd_HsSaveName() {
         meniuState  = MS_Start;
         saveName    = false;
         lockedMeniu = false;
-        waitBtnRls = true;
+        waitBtnRls  = true;
       }
       else {
         lcd.setCursor (15, 1);
@@ -417,10 +418,10 @@ void Lcd_HsSaveName() {
     }
   }
   else {
-    waitBtnRls = false;
     lcd.print (" Press To Save  ");
+    waitBtnRls   = false;
     lastBtnValue = !Js_btnPressed;
-    lockedMeniu = false;
+    lockedMeniu  = false;
   }
   
   if (!lockedMeniu) {
