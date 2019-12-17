@@ -7,12 +7,12 @@
 #define MAX_LVL 10
 #define MAX_BRI 14
 
-static const uint8_t matrix_csPin  = 10;
-static const uint8_t matrix_clkPin = 11;
-static const uint8_t matrix_dinPin = 12;
-static const uint8_t matrixNo      = 1;
-static LedControl    lc            = LedControl(matrix_dinPin, matrix_clkPin, matrix_csPin, matrixNo); //DIN, CLK, LOAD, No. DRIVER
-uint8_t Matrix_brightness = 5;
+static const uint8_t matrix_csPin      = 10;
+static const uint8_t matrix_clkPin     = 11;
+static const uint8_t matrix_dinPin     = 12;
+static const uint8_t matrixNo          = 1;
+static LedControl    lc                = LedControl(matrix_dinPin, matrix_clkPin, matrix_csPin, matrixNo); //DIN, CLK, LOAD, No. DRIVER
+uint8_t              Matrix_brightness = 5;
 
 void Matrix_Init () {
   lc.setIntensity(0, Matrix_brightness); // sets brightness (0~14 possible values)
@@ -121,7 +121,7 @@ HS_TYPE               score = 0;    // the current score
 uint8_t               lives,        // number of remaining lives (no more than 9)
                       level = 0;    // current level
 float                 remTime,      // the remaining time to finish the current level
-                      sc;       // score
+                      sc;           // score
                       
 // called before running Matrix_InGame to set/reset the game variables
 void Matrix_GameSetup ()
@@ -151,7 +151,7 @@ void Matrix_InGame() {
     if (cols[head] & (1 << playerPos)) { // collision
       if (lives > 0) {lives -= 1;}
       else {gameState = GS_EndGame; return;}
-      obsToNextLvl = nextObsToNextLvl[level] + COLS / obsDist; // restart level
+      obsToNextLvl    = nextObsToNextLvl[level] + COLS / obsDist; // restart level
       for (uint8_t col = 0; col < COLS; col += obsDist) { // Clear matrix of obstacles
         cols[col] = 0b00000000;
       }
@@ -162,14 +162,13 @@ void Matrix_InGame() {
     // update matrix
     if (head % obsDist == 0) {
       score = sc += ((cols[head] != (1 << playerPos)) * remTime * 100.0) / nextObsToNextLvl[level] / nextMoveDebounce[level];
-      Serial.println(score);
       if (obsToNextLvl > 1) {obsToNextLvl--;}
       else {
         if (level < MAX_LVL) {
           level++;
           if (lives < 9) {lives++;} // number of lives should be only a digit
         }
-        remTime = timeToFinishLvl[level]; // 30s time to finish the level
+        remTime      = timeToFinishLvl[level]; // 30s time to finish the level
         obsToNextLvl = nextObsToNextLvl[level];
       }
       cols[head] = Factory(level); // update the next (future) last column
