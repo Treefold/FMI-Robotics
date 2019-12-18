@@ -10,4 +10,4 @@ Lab4-4x7Digits_Display - using a joystick change the digits from a 4 7Digits dis
                               - UnLocked - DP     blinking (change the current digit       by going left and right)
                               * press the joystick to change between states
 Lab5-GameMeniu: https://youtu.be/AhCW87eZtUo
-+ update - live displayed: https://youtu.be/0BVR0d0-4Rg
++ update - lives displayed: https://youtu.be/0BVR0d0-4Rg
