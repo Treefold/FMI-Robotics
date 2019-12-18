@@ -4,7 +4,7 @@
 #define HS_TYPE            uint16_t
 #define HS_LEN   (uint8_t) 2 // (bytes)
 #define HS_NO    (uint8_t) 3 // number of saved highscores
-const uint8_t HS_resetPin = 3;
+const uint8_t hs_resetPin = 3;
 
 HS_TYPE HS_Read (uint8_t no) {
   HS_TYPE score = 0;

@@ -11,7 +11,7 @@ const uint8_t lcd_d6Pin     = 5;
 const uint8_t lcd_d7Pin     = 4;
 LiquidCrystal lcd (lcd_rsPin, lcd_enablePin, lcd_d4Pin, lcd_d5Pin, lcd_d6Pin, lcd_d7Pin);
 
-bool           lastBtnValue   = !Js_btnPressed,
+bool           lastBtnValue   = !js_btnPressed,
                lockedMeniu    = false, //
                saveName       = false,
                waitBtnRls     = false;
@@ -50,23 +50,23 @@ static void Lcd_printString (char *str) {
 void Lcd_Meniu() {
   if (!lockedMeniu) {
     Js_ReadX();
-    if (Js_vrxValue < Js_LeftPoint) {
-      if (lastVrxValue != Js_LeftPoint) {
+    if (js_vrxValue < js_LeftPoint) {
+      if (lastVrxValue != js_LeftPoint) {
         meniuState   = (MeniuState) ((int) meniuState - 1);
         waitBtnRls   = true;
-        lastVrxValue = Js_LeftPoint;
+        lastVrxValue = js_LeftPoint;
       }
     }
     else {
-      if (Js_vrxValue > Js_RightPoint) {
-        if (lastVrxValue != Js_RightPoint) {
+      if (js_vrxValue > js_RightPoint) {
+        if (lastVrxValue != js_RightPoint) {
           meniuState   = (MeniuState) ((int) meniuState + 1);
           waitBtnRls   = true;
-          lastVrxValue = Js_RightPoint;
+          lastVrxValue = js_RightPoint;
         }
       }
       else {
-        lastVrxValue = Js_NoPoint;
+        lastVrxValue = js_NoPoint;
       }
     }
   }
@@ -78,9 +78,9 @@ void Lcd_Meniu() {
       // check the btn was really pressed
       if (Js_btnIsPressed()){
         if (!waitBtnRls) {
-          if (lastBtnValue == !Js_btnPressed) {
+          if (lastBtnValue == !js_btnPressed) {
             startCountDown = millis();
-            lastBtnValue   = Js_btnPressed;
+            lastBtnValue   = js_btnPressed;
             lockedMeniu    = true;
             lcd.print (">Start in 3      "); // wait 3s
             break;
@@ -106,14 +106,14 @@ void Lcd_Meniu() {
         else {
           lcd.print (">Press to start ");
           lockedMeniu  = false;
-          lastBtnValue = !Js_btnPressed;
+          lastBtnValue = !js_btnPressed;
         }
       }
       else {
         lcd.print (">Press to start ");
         waitBtnRls   = false;
         lockedMeniu  = false;
-        lastBtnValue = !Js_btnPressed;
+        lastBtnValue = !js_btnPressed;
       }
       break;
     case MS_Lvl:
@@ -131,31 +131,31 @@ void Lcd_Meniu() {
       }
       lcd.print ("        ");
       if (Js_btnIsPressed()) {
-        if (lastBtnValue == !Js_btnPressed) {
+        if (lastBtnValue == !js_btnPressed) {
           lockedMeniu  = !lockedMeniu;
-          lastBtnValue = Js_btnPressed;
+          lastBtnValue = js_btnPressed;
         }
       }
       else {
-        lastBtnValue = !Js_btnPressed;
+        lastBtnValue = !js_btnPressed;
       }
       if (lockedMeniu) {
         Js_ReadY ();
-        if (Js_vryValue > Js_DownPoint) {
-          if (lastVryValue != Js_DownPoint) {
+        if (js_vryValue > js_DownPoint) {
+          if (lastVryValue != js_DownPoint) {
             if (level > 0) {--level;}
-            lastVryValue = Js_DownPoint;
+            lastVryValue = js_DownPoint;
           }
         }
         else {
-          if (Js_vryValue < Js_UpPoint) {
-            if (lastVryValue != Js_UpPoint) {
+          if (js_vryValue < js_UpPoint) {
+            if (lastVryValue != js_UpPoint) {
               if (level < MAX_LVL) {++level;}
-              lastVryValue = Js_UpPoint;
+              lastVryValue = js_UpPoint;
             }
           }
           else {
-            lastVryValue = Js_NoPoint;
+            lastVryValue = js_NoPoint;
           }
         }
       }
@@ -166,33 +166,33 @@ void Lcd_Meniu() {
       lcd.setCursor (0, 1);
       lcd.print ("Brightness:     ");
       lcd.setCursor (12, 1);
-      lcd.print (Matrix_brightness);
+      lcd.print (matrix_brightness);
       if (Js_btnIsPressed()) {
-        if (lastBtnValue == !Js_btnPressed) {
+        if (lastBtnValue == !js_btnPressed) {
           lockedMeniu  = !lockedMeniu;
-          lastBtnValue = Js_btnPressed;
+          lastBtnValue = js_btnPressed;
         }
       }
       else {
-        lastBtnValue = !Js_btnPressed;
+        lastBtnValue = !js_btnPressed;
       }
       if (lockedMeniu) {
         Js_ReadY ();
-        if (Js_vryValue > Js_DownPoint) {
-          if (lastVryValue != Js_DownPoint) {
-            if (Matrix_brightness > 1) {--Matrix_brightness;}
-            lastVryValue = Js_DownPoint;
+        if (js_vryValue > js_DownPoint) {
+          if (lastVryValue != js_DownPoint) {
+            if (matrix_brightness > 1) {--matrix_brightness;}
+            lastVryValue = js_DownPoint;
           }
         }
         else {
-          if (Js_vryValue < Js_UpPoint) {
-            if (lastVryValue != Js_UpPoint) {
-              if (Matrix_brightness < MAX_BRI) {++Matrix_brightness;}
-              lastVryValue = Js_UpPoint;
+          if (js_vryValue < js_UpPoint) {
+            if (lastVryValue != js_UpPoint) {
+              if (matrix_brightness < MAX_BRI) {++matrix_brightness;}
+              lastVryValue = js_UpPoint;
             }
           }
           else {
-            lastVryValue = Js_NoPoint;
+            lastVryValue = js_NoPoint;
           }
         }
         Matrix_UpdateBrightness();
@@ -214,31 +214,31 @@ void Lcd_Meniu() {
       Lcd_printString (nameHS);
 
       if (Js_btnIsPressed()) {
-        if (lastBtnValue == !Js_btnPressed) {
+        if (lastBtnValue == !js_btnPressed) {
           lockedMeniu  = !lockedMeniu;
-          lastBtnValue = Js_btnPressed;
+          lastBtnValue = js_btnPressed;
         }
       }
       else {
-        lastBtnValue = !Js_btnPressed;
+        lastBtnValue = !js_btnPressed;
       }
       if (lockedMeniu) {
         Js_ReadY ();
-        if (Js_vryValue > Js_DownPoint) {
-          if (lastVryValue != Js_DownPoint) {
+        if (js_vryValue > js_DownPoint) {
+          if (lastVryValue != js_DownPoint) {
             if (rank < HS_NO - 1) {++rank;}
-            lastVryValue = Js_DownPoint;
+            lastVryValue = js_DownPoint;
           }
         }
         else {
-          if (Js_vryValue < Js_UpPoint) {
-            if (lastVryValue != Js_UpPoint) {
+          if (js_vryValue < js_UpPoint) {
+            if (lastVryValue != js_UpPoint) {
               if (rank > 0) {--rank;}
-              lastVryValue = Js_UpPoint;
+              lastVryValue = js_UpPoint;
             }
           }
           else {
-            lastVryValue = Js_NoPoint;
+            lastVryValue = js_NoPoint;
           }
         }
       }
@@ -306,15 +306,15 @@ void Lcd_HsMeniu() {
   lcd.print (score);
   lcd.setCursor (0, 1);
   Js_ReadX ();
-  if (Js_vrxValue < Js_LeftPoint)  {saveName = true;}
-  if (Js_vrxValue > Js_RightPoint) {saveName = false;}
+  if (js_vrxValue < js_LeftPoint)  {saveName = true;}
+  if (js_vrxValue > js_RightPoint) {saveName = false;}
   if (Js_btnIsPressed()){
     if (!waitBtnRls) {
-      if (lastBtnValue == !Js_btnPressed) {
+      if (lastBtnValue == !js_btnPressed) {
         lcd.setCursor (0, 1);
         lcd.print ((saveName) ? ">Set Name: Yes 3" : ">Set Name:  No 3");
         startCountDown = millis();
-        lastBtnValue   = Js_btnPressed;
+        lastBtnValue   = js_btnPressed;
         return;
       }
       if (millis() > startCountDown + 3000) {
@@ -323,8 +323,8 @@ void Lcd_HsMeniu() {
           gameState = GS_HsSaveName;
           strcpy (name, "       ");
           currLet = 0;
-          lastVrxValue = Js_NoPoint;
-          lastVryValue = Js_NoPoint;
+          lastVrxValue = js_NoPoint;
+          lastVryValue = js_NoPoint;
           lcd.setCursor (0, 0);
           lcd.print ("Name:|         |");
           return;
@@ -354,7 +354,7 @@ void Lcd_HsMeniu() {
   }
   else {
     waitBtnRls   = false;
-    lastBtnValue = !Js_btnPressed;
+    lastBtnValue = !js_btnPressed;
   }
   lcd.print ((saveName) ? "Set Name: Yes > " : "Set Name: < No  ");
 }
@@ -388,12 +388,12 @@ void Lcd_HsSaveName() {
   lcd.setCursor (0, 1);
   if (Js_btnIsPressed()) {
     if (!waitBtnRls) {
-      if (lastBtnValue == !Js_btnPressed) {
+      if (lastBtnValue == !js_btnPressed) {
         lcd.setCursor (0, 1);
         lcd.print (">Name saved in 3");
         startCountDown = millis();
         lockedMeniu    = true;
-        lastBtnValue   = Js_btnPressed;
+        lastBtnValue   = js_btnPressed;
       }
       if (millis() > startCountDown + 3000) {
         HS_Update (score, name);
@@ -420,34 +420,34 @@ void Lcd_HsSaveName() {
   else {
     lcd.print (" Press To Save  ");
     waitBtnRls   = false;
-    lastBtnValue = !Js_btnPressed;
+    lastBtnValue = !js_btnPressed;
     lockedMeniu  = false;
   }
   
   if (!lockedMeniu) {
     Js_ReadX ();
     Js_ReadY ();
-    if (Js_vrxValue < Js_LeftPoint) {
-      if (lastVrxValue != Js_LeftPoint && Js_vryValue >= Js_UpPoint && Js_vryValue <= Js_DownPoint && currLet > 0) {
+    if (js_vrxValue < js_LeftPoint) {
+      if (lastVrxValue != js_LeftPoint && js_vryValue >= js_UpPoint && js_vryValue <= js_DownPoint && currLet > 0) {
         currLet--;
-        lastVrxValue = Js_LeftPoint;
-        lastVryValue = Js_NoPoint;
+        lastVrxValue = js_LeftPoint;
+        lastVryValue = js_NoPoint;
       }
     }
     else {
-      if (Js_vrxValue > Js_RightPoint) {
-        if (lastVrxValue != Js_RightPoint && Js_vryValue >= Js_UpPoint && Js_vryValue <= Js_DownPoint && currLet < NAME_LEN - 2) {
+      if (js_vrxValue > js_RightPoint) {
+        if (lastVrxValue != js_RightPoint && js_vryValue >= js_UpPoint && js_vryValue <= js_DownPoint && currLet < NAME_LEN - 2) {
           // -2 for each: the last one is '\0' and cannot move to the right letter if there are no more letters
           currLet++;
-          lastVrxValue = Js_RightPoint;
-          lastVryValue = Js_NoPoint;
+          lastVrxValue = js_RightPoint;
+          lastVryValue = js_NoPoint;
         }
       }
       else {
-        lastVrxValue = Js_NoPoint;
-        if (Js_vryValue > Js_DownPoint) {
-          if (lastVryValue != Js_DownPoint) {
-            lastVryValue = Js_DownPoint;
+        lastVrxValue = js_NoPoint;
+        if (js_vryValue > js_DownPoint) {
+          if (lastVryValue != js_DownPoint) {
+            lastVryValue = js_DownPoint;
             if (name[currLet] == ' ') {
               name[currLet] = 'Z';
             }
@@ -462,9 +462,9 @@ void Lcd_HsSaveName() {
           }
         }
         else {
-          if (Js_vryValue < Js_UpPoint) {
-            if (lastVryValue != Js_UpPoint) {
-              lastVryValue = Js_UpPoint;
+          if (js_vryValue < js_UpPoint) {
+            if (lastVryValue != js_UpPoint) {
+              lastVryValue = js_UpPoint;
               if (name[currLet] == ' ') {
                 name[currLet] = 'A';
               }
@@ -479,7 +479,7 @@ void Lcd_HsSaveName() {
             }
           }
           else {
-            lastVryValue = Js_NoPoint;
+            lastVryValue = js_NoPoint;
           }
         }
       }

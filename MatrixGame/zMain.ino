@@ -1,9 +1,9 @@
 void setup() {
   Serial.begin (9600);
   pinMode (PAUSE_PIN,   INPUT_PULLUP);
-  pinMode (HS_resetPin, INPUT_PULLUP);
+  pinMode (hs_resetPin, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(PAUSE_PIN),   Pause,    LOW);
-  attachInterrupt(digitalPinToInterrupt(HS_resetPin), HS_Reset, FALLING);
+  attachInterrupt(digitalPinToInterrupt(hs_resetPin), HS_Reset, FALLING);
   Js_Init();
   Lcd_Init();
   Matrix_Init();

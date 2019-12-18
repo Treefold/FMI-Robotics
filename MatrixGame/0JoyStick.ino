@@ -1,31 +1,31 @@
 // JoyStick JS
-const uint8_t  Js_vrxPin     = A0,
-               Js_vryPin     = A1,
-               Js_btnPin     = 13;
-const bool     Js_btnPressed = 0;
-const uint16_t Js_LeftPoint  = 1023 / 4,
-               Js_RightPoint = 1023 * 3 / 4,
-               Js_UpPoint    = 1023 / 4,
-               Js_DownPoint  = 1023  * 3 / 4,
-               Js_NoPoint    = 1023 / 2;
-uint16_t       Js_vrxValue   = Js_NoPoint,
-               Js_vryValue   = Js_NoPoint;
-bool           Js_btnValue   = !Js_btnPressed;
+const uint8_t  js_vrxPin     = A0,
+               js_vryPin     = A1,
+               js_btnPin     = 13;
+const bool     js_btnPressed = 0;
+const uint16_t js_LeftPoint  = 1023 / 4,
+               js_RightPoint = 1023 * 3 / 4,
+               js_UpPoint    = 1023 / 4,
+               js_DownPoint  = 1023  * 3 / 4,
+               js_NoPoint    = 1023 / 2;
+uint16_t       js_vrxValue   = js_NoPoint,
+               js_vryValue   = js_NoPoint;
+bool           js_btnValue   = !js_btnPressed;
 
 void Js_Init() {
-  pinMode (Js_btnPin, INPUT_PULLUP);
+  pinMode (js_btnPin, INPUT_PULLUP);
 }
 
 void Js_ReadX () {
-  Js_vrxValue = analogRead (Js_vrxPin);
+  js_vrxValue = analogRead (js_vrxPin);
 }
 
 void Js_ReadY () {
-  Js_vryValue = analogRead (Js_vryPin);
+  js_vryValue = analogRead (js_vryPin);
 }
 
 bool Js_btnIsPressed() {
-  return (digitalRead (Js_btnPin) == Js_btnPressed
-          && digitalRead (Js_btnPin) == Js_btnPressed
-          && digitalRead (Js_btnPin) == Js_btnPressed);
+  return (digitalRead (js_btnPin) == js_btnPressed
+          && digitalRead (js_btnPin) == js_btnPressed
+          && digitalRead (js_btnPin) == js_btnPressed);
 }
