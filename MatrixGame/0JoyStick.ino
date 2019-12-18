@@ -1,4 +1,4 @@
-// JoyStick JS
+// JoyStick JS *DO NOT RENAME FILE*
 const uint8_t  js_vrxPin     = A0,
                js_vryPin     = A1,
                js_btnPin     = 13;
