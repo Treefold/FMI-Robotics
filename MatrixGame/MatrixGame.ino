@@ -1,4 +1,5 @@
 // Game states and meniu states can be change anywhere
+// This file must have the name of its containing file
 
 #define PAUSE_PIN 2
 
