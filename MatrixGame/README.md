@@ -1,7 +1,8 @@
 Game idea: 
             "Flappy Bird"/"Jetpack Joyride" where the player flies while you press the joystick button, and flies down when it's released.
             
-            The game purpose is to evade as many obstacles as possible.
+            The game objective is to evade as many obstacles as possible.
+            BUT the game purpuse is to make you have fun while challanging your limits.
 
 Video: https://youtu.be/fKGVIYG6WfQ
 
@@ -85,3 +86,7 @@ HW components: (Also see the MatrixGame.jpg)
   - Resistors (100k, 220)
   - Capacitors (10 micoF, 104 pF)
   - Wires + Breadboards (+ some duct tape)
+  
+  
+  
+  Are YOU brave enough to try?
