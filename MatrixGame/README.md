@@ -1,7 +1,7 @@
 Game idea: 
             "Flappy Bird"/"Jetpack Joyride" where the player flies while you press the joystick button, and flies down when it's released.
             
-            Game purpose is to evade as many obstacles as possible.
+            The game purpose is to evade as many obstacles as possible.
 
 Video: https://youtu.be/fKGVIYG6WfQ
 
