@@ -1,4 +1,4 @@
-// Highscore HS
+// Highscore HS *DO NOT RENAME FILE*
 #include <EEPROM.h>
 #define NAME_LEN (uint8_t) 8 // (bytes)
 #define HS_TYPE            uint16_t
