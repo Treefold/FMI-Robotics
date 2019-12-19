@@ -65,6 +65,7 @@ void Matrix_Animate() {
 
 // returns an obstacle
 static uint8_t Factory (uint8_t lvl) {
+  // for a specific level, the obstacles should have a specific complexity
   static const uint8_t factoryMin[] = {0,  0,  5,  5, 10, 10, 10, 15, 15, 15, 15},
                        factoryMax[] = {5, 10, 10, 15, 15, 21, 21, 21, 21, 28, 28};
   if (lvl > MAX_LVL) {return 0b00000000;}
@@ -131,26 +132,26 @@ void Matrix_GameSetup ()
     cols[col] = 0b00000000; // clear matrix
   }
   head         = 0;
-  lives        = 3;
-  playerPos    = 4;
-  score        = 0;
-  sc           = 0;
-  obsToNextLvl = nextObsToNextLvl[level];
-  remTime      = timeToFinishLvl [level];
-  nextMove     = millis() + obsToNextLvl;
+  lives        = 3; // reset lives
+  playerPos    = 4; // reset player position to be in the middle of the first collumn
+  score        = 0; // reset dysplayed score
+  sc           = 0; // reset current score
+  obsToNextLvl = nextObsToNextLvl[level]; // set the obstacles to pass according to the selected level
+  remTime      = timeToFinishLvl [level]; // set the remaining time to pass the level according to the selected level 
+  nextMove     = millis() + obsToNextLvl; // after the setup is done the Matrix_InGame is called fast enough to not see a diffentence
 }
 
 // Play the game
 void Matrix_InGame() {
   now = millis();
-  if (now > nextMove) {
+  if (now > nextMove) { // if it's the time to reset refresh the matrix
     if (remTime >= (now - nextMove + nextMoveDebounce[level])*1.0/1000) {
-      remTime -= (now - nextMove + nextMoveDebounce[level])*1.0/1000;
+      remTime -= (now - nextMove + nextMoveDebounce[level])*1.0/1000; // update remaining time
     }
     else {if (level != MAX_LVL){gameState = GS_EndGame; return;}} // the last level has no time limit
     if (cols[head] & (1 << playerPos)) { // collision
       if (lives > 0) {lives -= 1;}
-      else {gameState = GS_EndGame; return;}
+      else {gameState = GS_EndGame; return;} 
       obsToNextLvl    = nextObsToNextLvl[level] + COLS / obsDist; // restart level
       for (uint8_t col = 0; col < COLS; col += obsDist) { // Clear matrix of obstacles
         cols[col] = 0b00000000;
@@ -160,20 +161,23 @@ void Matrix_InGame() {
     cols[head] |= (1 << playerPos);
     Print (cols, head);
     // update matrix
-    if (head % obsDist == 0) {
-      score = sc += ((cols[head] != (1 << playerPos)) * remTime * 100.0) / nextObsToNextLvl[level] / nextMoveDebounce[level];
+    if (head % obsDist == 0) { // if an obstacle was passed
+      score = sc += ((cols[head] != (1 << playerPos)) * remTime * 100.0) / nextObsToNextLvl[level] / nextMoveDebounce[level]; // update score
       if (obsToNextLvl > 1) {obsToNextLvl--;}
       else {
         if (level < MAX_LVL) {
           level++;
           if (lives < 9) {lives++;} // number of lives should be only a digit
         }
-        remTime      = timeToFinishLvl[level]; // 30s time to finish the level
+        // update conditions to pass the level
+        remTime      = timeToFinishLvl[level];
         obsToNextLvl = nextObsToNextLvl[level];
       }
       cols[head] = Factory(level); // update the next (future) last column
+      // the current first column becomes the last column in the next matrix
+      // if the column had an obstacle, the obstacle should be updated according to the current level
     }
-    else {cols[head] = 0b00000000;}
+    else {cols[head] = 0b00000000;} // if it was just a column between 2 obstacles, it is cleard (of the player position)
     // move player
     head = (head + 1) % COLS;
     if (Js_btnIsPressed()) {
