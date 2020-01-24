@@ -118,7 +118,7 @@ static uint8_t        cols[COLS],   // matrix kept as a circular list of columns
                       obsToNextLvl; // current number of obstacles to pass to advance to the next level
 static uint64_t       now,          // the current time
                       nextMove;     // the time when the matrix has to refresh
-HS_TYPE               score = 0;    // the current score
+uint16_t              score = 0;    // the current score
 uint8_t               lives,        // number of remaining lives (no more than 9)
                       level = 0;    // current level
 float                 remTime,      // the remaining time to finish the current level
@@ -148,10 +148,10 @@ void Matrix_InGame() {
     if (remTime >= (now - nextMove + nextMoveDebounce[level])*1.0/1000) {
       remTime -= (now - nextMove + nextMoveDebounce[level])*1.0/1000; // update remaining time
     }
-    else {if (level != MAX_LVL){gameState = GS_EndGame; return;}} // the last level has no time limit
+    //else {if (level != MAX_LVL){gameState = GS_EndGame; return;}} // the last level has no time limit
     if (cols[head] & (1 << playerPos)) { // collision
       if (lives > 0) {lives -= 1;}
-      else {gameState = GS_EndGame; return;} 
+      // else {gameState = GS_EndGame; return;} 
       obsToNextLvl    = nextObsToNextLvl[level] + COLS / obsDist; // restart level
       for (uint8_t col = 0; col < COLS; col += obsDist) { // Clear matrix of obstacles
         cols[col] = 0b00000000;
