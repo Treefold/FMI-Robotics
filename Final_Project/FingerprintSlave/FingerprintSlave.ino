@@ -1,141 +1,101 @@
-/*************************************************** 
-  This is an example sketch for our optical Fingerprint sensor
-
-  Designed specifically to work with the Adafruit BMP085 Breakout 
-  ----> http://www.adafruit.com/products/751
-
-  These displays use TTL Serial to communicate, 2 pins are required to 
-  interface
-  Adafruit invests time and resources providing this open source code, 
-  please support Adafruit and open-source hardware by purchasing 
-  products from Adafruit!
-
-  Written by Limor Fried/Ladyada for Adafruit Industries.  
-  BSD license, all text above must be included in any redistribution
- ****************************************************/
-
-
+#include <TimerOne.h>
+#include <SPI.h>
+#include <nRF24L01.h>
+#include <RF24.h>
+#define  PIN const uint8_t
 #include <Adafruit_Fingerprint.h>
-
-// On Leonardo/Micro or others with hardware serial, use those! #0 is green wire, #1 is white
-// uncomment this line:
-// #define mySerial Serial1
-
-// For UNO and others without hardware serial, we must use software serial...
-// pin #2 is IN from sensor (GREEN wire)
-// pin #3 is OUT from arduino  (WHITE wire)
-// comment these two lines if using hardware serial
 SoftwareSerial mySerial(6, 7);
+Adafruit_Fingerprint finger = Adafruit_Fingerprint (&mySerial);
 
-Adafruit_Fingerprint finger = Adafruit_Fingerprint(&mySerial);
+enum STATS {
+  idle,    // cancel
+  getUser, // authenticate
+  setUser, // register
+} stat = getUser;
 
-void setup()  
-{
-  Serial.begin(9600);
-  while (!Serial);  // For Yun/Leo/Micro/Zero/...
-  delay(100);
-  Serial.println("\n\nAdafruit finger detect test");
+const byte ADDRESS[6] = "SPLYR";
 
-  // set the data rate for the sensor serial port
-  finger.begin(57600);
-  delay(5);
-  if (finger.verifyPassword()) {
-    Serial.println("Found fingerprint sensor!");
-  } else {
-    Serial.println("Did not find fingerprint sensor :(");
-    while (1) { delay(1); }
+PIN cePin           = 9, // rf24 cip enable
+    csnPin          = 8, // rf24 cip select not
+    incomingDataPin = 2; // rf24 interrupt signal
+     
+RF24 radio(cePin, csnPin);
+
+struct Msg {
+  uint8_t id, nr;
+};
+
+void receiveData() {
+  Msg msg;
+  radio.read (&msg, sizeof (msg));
+  if (msg.id == 'S') {
+    if (msg.nr == idle)                    {stat = idle;}
+    if (stat == idle && msg.nr == getUser) {
+      stat = getUser;
+      Timer1.attachInterrupt (getFingerprintId);
+    }
+    if (stat == idle && msg.nr == setUser) {stat = setUser;}
+    radio.stopListening();
+    delay(3);
+    radio.write (&msg, sizeof (msg));
+    delay(3);
+    radio.startListening();
   }
-
-  finger.getTemplateCount();
-  Serial.print("Sensor contains "); Serial.print(finger.templateCount); Serial.println(" templates");
-  Serial.println("Waiting for valid finger...");
-}
-
-void loop()                     // run over and over again
-{
-  getFingerprintIDez();
-  delay(50);            //don't ned to run this at full speed.
-}
-
-uint8_t getFingerprintID() {
-  uint8_t p = finger.getImage();
-  switch (p) {
-    case FINGERPRINT_OK:
-      Serial.println("Image taken");
-      break;
-    case FINGERPRINT_NOFINGER:
-      Serial.println("No finger detected");
-      return p;
-    case FINGERPRINT_PACKETRECIEVEERR:
-      Serial.println("Communication error");
-      return p;
-    case FINGERPRINT_IMAGEFAIL:
-      Serial.println("Imaging error");
-      return p;
-    default:
-      Serial.println("Unknown error");
-      return p;
-  }
-
-  // OK success!
-
-  p = finger.image2Tz();
-  switch (p) {
-    case FINGERPRINT_OK:
-      Serial.println("Image converted");
-      break;
-    case FINGERPRINT_IMAGEMESS:
-      Serial.println("Image too messy");
-      return p;
-    case FINGERPRINT_PACKETRECIEVEERR:
-      Serial.println("Communication error");
-      return p;
-    case FINGERPRINT_FEATUREFAIL:
-      Serial.println("Could not find fingerprint features");
-      return p;
-    case FINGERPRINT_INVALIDIMAGE:
-      Serial.println("Could not find fingerprint features");
-      return p;
-    default:
-      Serial.println("Unknown error");
-      return p;
-  }
-  
-  // OK converted!
-  p = finger.fingerFastSearch();
-  if (p == FINGERPRINT_OK) {
-    Serial.println("Found a print match!");
-  } else if (p == FINGERPRINT_PACKETRECIEVEERR) {
-    Serial.println("Communication error");
-    return p;
-  } else if (p == FINGERPRINT_NOTFOUND) {
-    Serial.println("Did not find a match");
-    return p;
-  } else {
-    Serial.println("Unknown error");
-    return p;
-  }   
-  
-  // found a match!
-  Serial.print("Found ID #"); Serial.print(finger.fingerID); 
-  Serial.print(" with confidence of "); Serial.println(finger.confidence); 
-
-  return finger.fingerID;
 }
 
 // returns -1 if failed, otherwise returns ID #
 int getFingerprintIDez() {
-  uint8_t p = finger.getImage();
-  if (p != FINGERPRINT_OK)  return -1;
+  uint8_t p;
+  if (finger.getImage()         != FINGERPRINT_OK
+   || finger.image2Tz()         != FINGERPRINT_OK
+   || finger.fingerFastSearch() != FINGERPRINT_OK
+  ) {return -1;}
+  return finger.fingerID; // found a match!
+}
 
-  p = finger.image2Tz();
-  if (p != FINGERPRINT_OK)  return -1;
+void getFingerprintId() {
+  int id;
+  if ((id = getFingerprintIDez()) == -1) return;
+  Serial.print("Found ID #"); Serial.println(id); 
+  Msg msg;
+  msg.id = 'S';
+  msg.nr = id & 0x80; // set the first bit to mark that this is a valid id 
+  radio.stopListening();
+  delay(3);
+  radio.write (&msg, sizeof (msg));
+  delay(3);
+  stat = idle;
+  radio.startListening();
+  Timer1.detachInterrupt ();
+}
 
-  p = finger.fingerFastSearch();
-  if (p != FINGERPRINT_OK)  return -1;
+void setup()  
+{
+  Timer1.initialize(50);
+  finger.begin(57600);
+  Serial.begin(9600);
+  if (finger.verifyPassword()) {
+    Serial.println("Found fingerprint sensor!");
+  } else {
+    Serial.println("Did not find fingerprint sensor");
+    while (1) {delay(1);}
+  }
+  radio.begin();
+  radio.stopListening();
+  radio.openWritingPipe (ADDRESS);
+  radio.openReadingPipe (1, ADDRESS);
+  attachInterrupt (digitalPinToInterrupt (incomingDataPin), receiveData, LOW);
+  radio.startListening();
   
-  // found a match!
-  Serial.print("Found ID #"); Serial.print(finger.fingerID); 
-  Serial.print(" with confidence of "); Serial.println(finger.confidence);
-  return finger.fingerID; 
+  stat = getUser;
+  Timer1.attachInterrupt (getFingerprintId);
+}
+
+void loop()                     // run over and over again
+{
+  return;
+  switch (stat) {
+    case idle:    delay (100);        break;
+    case getUser: getFingerprintId(); break;
+  }
 }
