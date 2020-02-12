@@ -68,7 +68,7 @@ void tim() {
   delay(3);
   radio.openWritingPipe(address[x + 1]);
   radio.write(&msg, sizeof(msg));
-  x = (x+1)%4;
+  x = (x+1)%PLYE_NO;
   delay (3);
   radio.startListening();
 }
@@ -89,7 +89,7 @@ void setup()
   radio.begin();
   radio.stopListening();
   // pipe 1 for fingerpint 
-  // and pipes from 2 to PLYE_NO (1-4) for players
+  // and pipes from 2 to PLYE_NO(1-4) + 1 for players
   for (uint8_t pipe = 0; pipe <= PLYE_NO; ++pipe) {
     radio.openReadingPipe (pipe + 1, address [pipe]);
   }
@@ -97,8 +97,6 @@ void setup()
   Timer1.initialize(1000000);
   Timer1.attachInterrupt (tim);
 }
-
-
 
 void loop()
 {

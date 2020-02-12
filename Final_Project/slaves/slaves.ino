@@ -32,11 +32,6 @@ void receiveData() {
   radio.startListening();
 }
 
-void callback() {
-  static uint8_t x = 0;
-  Serial.println(x++);
-}
-
 void setup()
 {
   while (!Serial);
