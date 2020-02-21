@@ -1,57 +1,71 @@
+#include <LiquidCrystal_I2C.h>
 #include <SPI.h>
+#include "nRF24L01.h"
 #include "RF24.h"
+#include "printf.h"
 #define  PIN const uint8_t
 PIN cePin           = 9, // rf24 cip enable
     csnPin          = 8, // rf24 cip select not
     incomingDataPin = 2; // rf24 interrupt signal
+// too many pins to declare each of them as a define
+LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);  
 RF24 radio(cePin, csnPin);  // CE, CSN
 byte addresses[][6] = {"SSlve", "SMstr"};
 struct Msg {uint8_t id, nr;} msg;
-                                           
-byte counter = 1; 
 
 void setup() {
   Serial.begin(9600);
+  lcd.begin(16,2); 
+  lcd.clear(); 
   radio.begin();
   radio.enableAckPayload();
   radio.enableDynamicPayloads();
+  radio.stopListening();
   radio.openWritingPipe(addresses[0]);
   radio.openReadingPipe(1, addresses[1]);
-  radio.startListening();
 }
 
-void loop(void) {
-    uint16_t gotByte;                                           // Initialize a variable for the incoming response
+enum {
+  logIn,
+  selectGame,
+  inGame,
+  details
+} masterState = logIn;
 
-    radio.stopListening();                                  // First, stop listening so we can talk.
-    Serial.print(F("Now sending "));                         // Use a simple byte counter as payload
-    Serial.println(counter);
+enum {
+  
+}
 
-    unsigned long time = micros();                          // Record the current microsecond count
-    msg.id = 6;
-    msg.nr = counter;
-    if ( radio.write(&msg, sizeof(Msg)) ) {                       // Send the counter variable to the other radio
-      if (!radio.available()) {                           // If nothing in the buffer, we got an ack but it is blank
-        Serial.print(F("Got blank response. round-trip delay: "));
-        Serial.print(micros() - time);
-        Serial.println(F(" microseconds"));
-      } else {
+void mesage() {
+  msg.id = 'S';
+    msg.nr = 1;
+    if ( radio.write(&msg, sizeof(Msg)) ) { 
+      
         while (radio.available() ) {                    // If an ack with payload was received
           radio.read( &msg, sizeof(Msg));                  // Read it, and display the response time
           unsigned long timer = micros();
 
           Serial.print(F("Got response "));
-          Serial.print(msg.id * 1000 + msg.nr);
-          Serial.print(F(" round-trip delay: "));
-          Serial.print(timer - time);
-          Serial.println(F(" microseconds"));
-          counter++;                                  // Increment the counter variable
+          Serial.println(msg.nr);                                 // Increment the counter variable
         }
-      }
+      
 
     } else {
       Serial.println(F("Sending failed."));  // If no ack response, sending failed
     }
+}
 
-    delay(1000);  // Try again later
+void doLogIn() {
+  lcd.setCursor(0, 0);
+  lcd.print ("   Guest   LogIn");
+  lcd.setCursor(0, 1);
+  lcd.print ("   CreateNew    ");
+  
+}
+
+void loop(void) {
+  switch(masterState) {
+    case logIn: doLogIn();
+      
+  }
 }
