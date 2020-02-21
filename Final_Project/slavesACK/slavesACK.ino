@@ -2,8 +2,8 @@
 #include "RF24.h"
 #include <Adafruit_Fingerprint.h>
 #define  PIN const uint8_t
-PIN cePin           = 9, // rf24 cip enable
-    csnPin          = 8, // rf24 cip select not
+PIN cePin           = 8, // rf24 cip enable
+    csnPin          = 9, // rf24 cip select not
     fingerRxPin     = 7, // fingerprint sensor RX
     fingerTxPin     = 6, // fingerprint sensor TX
     incomingDataPin = 2; // rf24 interrupt signal
@@ -60,6 +60,7 @@ void receiveData() {
       case idle: 
         stat = idle; 
         progress = notStarted;
+        msg.nr   = 0x80;
         break;
       case getUser:
         if (stat == getUser) {
