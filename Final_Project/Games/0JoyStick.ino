@@ -2,7 +2,7 @@
 const uint8_t  js_vrxPin     = A0,
                js_vryPin     = A1,
                js_btnPin     = 3;
-const bool     js_btnPressed = 0;
+const bool     js_btnPressed = 1;
 const uint16_t js_LeftPoint  = 1023 / 4,
                js_RightPoint = 1023 * 3 / 4,
                js_UpPoint    = 1023 / 4,

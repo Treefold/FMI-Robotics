@@ -22,11 +22,10 @@ uint8_t joystickState () {
   // b = button state: 0 - not pressed, 1 - pressed
   // yy = 00 - nothing, 01 - up,   10 - down
   // xx = 00 - nothing, 01 - left, 10 - right
-  uint8_t state = 0,
-          x     = analogRead   (A1),
-          y     = analogRead   (A0),
-          btn   = !digitalRead (3);
-  
+  uint16_t state = 0,
+           x     = analogRead   (A1),
+           y     = analogRead   (A0),
+           btn   = !digitalRead (3);
   if (x > 767) { // left
     state |= (1);
   }
@@ -41,21 +40,35 @@ uint8_t joystickState () {
     state |= (1) << 2;
   }
   else { 
-    if (x < 256) { // down
+    if (y < 256) { // down
       state |= (2) << 2;
     }
     // else not modified
   }
       
-  state |= (btn) << 5; 
+  state |= (btn) << 4; 
 
   return state;
 }
 
+
+
+void att () {
+  attachInterrupt (digitalPinToInterrupt (incomingDataPin), receiveData, LOW);
+}
+void deta () {
+  detachInterrupt (digitalPinToInterrupt (incomingDataPin)); 
+}
+
 void receiveData() {
   radio.read (&msg, sizeof(Msg));
-  if (msg.id == '1' && msg.nr & 0x80) { // state = controler
-    msg.nr = 0x80 | joystickState(); // mark with 0x1------- as a valit message
+  if (msg.id == '1') { // state = controler
+    if ((msg.nr & 0x80 && msg.nr & 0x7F)) {
+      msg.nr = 0x80 | joystickState();
+    }
+    else {
+      deta();
+    }
   }
   else {msg.id = msg.nr = 0;}
   radio.writeAckPayload(1, &msg, sizeof(Msg));
@@ -63,22 +76,18 @@ void receiveData() {
 
 void setup() {
   Serial.begin (9600);
+  Serial.println("start");
   radio.begin();
   radio.enableAckPayload();
   radio.enableDynamicPayloads();
   radio.openWritingPipe(addresses[1]);
   radio.openReadingPipe(1, addresses[0]);
-  attachInterrupt (digitalPinToInterrupt (incomingDataPin), receiveData, LOW);
+  att();
   radio.startListening();
   Js_Init();
   Matrix_Init();
 }
 
 void loop() {
-    //Matrix_InGame();
-    Serial.print (analogRead(A0));
-    Serial.print (" ");
-    Serial.print (analogRead(A1));
-    Serial.print (" ");
-    Serial.println (digitalRead(3));
+  Matrix_InGame();
 }
