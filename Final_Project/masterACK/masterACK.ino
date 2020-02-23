@@ -56,7 +56,7 @@ enum {
 enum {
   notAuth,
   setCode,
-  authed
+  deleting
 } authState = notAuth;
 
 // too many pins to declare each of them as a define
@@ -66,19 +66,16 @@ byte addresses[][6] = {"SSlve", "SMstr", "1Slve", "1Mstr"};
 struct Msg {uint8_t id, nr;} msg;
 
 void Askjs() { // ask joystick for its states: vrX, vrY, brn
-  //static uint32_t lastJsMsg = 0;
-  //if (lastJsMsg + 50 < millis()) {return 0;}
-  //lastJsMsg = millis();
   msg.id = '1';
   msg.nr = 0x80;
   radio.openWritingPipe(addresses[2]);
   if (radio.write(&msg, sizeof(Msg))) { 
       while (radio.available() ) { 
         radio.read( &msg, sizeof(Msg));  
-        //Serial.println(msg.nr, BIN);   
-        vrxValue = msg.nr & 3;
-        vryValue = (msg.nr & (3<<2)) >> 2;
-        btnValue = (msg.nr & (1<<4)) >> 4;
+        // msg.nr = ---byyxx
+        vrxValue = msg.nr & 3;             // xx
+        vryValue = (msg.nr & (3<<2)) >> 2; // yy
+        btnValue = (msg.nr & (1<<4)) >> 4; // b
       }
   } else {
     Serial.println("Sending failed."); 
@@ -88,7 +85,6 @@ void Askjs() { // ask joystick for its states: vrX, vrY, brn
 bool btnIsPressed () {
   return btnValue == pressed;
 }
-
 
 void setup() {
   Serial.begin(9600);
@@ -102,6 +98,7 @@ void setup() {
   radio.openWritingPipe(addresses[0]);
   radio.openReadingPipe(1, addresses[1]);
   radio.openReadingPipe(2, addresses[2]);
+  while (radio.available()) {radio.read (&msg, sizeof(Msg));}
 }
 
 uint8_t mesageFingerp(uint8_t st) {
@@ -116,9 +113,9 @@ uint8_t mesageFingerp(uint8_t st) {
         return msg.nr;
       }
   } else {
-    Serial.println("Sending failed");  // If no ack response, sending failed
+    Serial.println("Sending to Fingerprint failed");  // If no ack response, sending failed
   }
-  return 1;
+  return 0xFF; // fault
 }
 
 void loop(void) {

@@ -29,6 +29,8 @@ static void Lcd_printString (char *str) {
   }
 }
 
+uint8_t rsp = 0;
+
 void Lcd_Meniu() {
   if (!lockedMeniu) {
     if (vrxValue == left) {
@@ -106,9 +108,10 @@ void Lcd_Meniu() {
           lcd.print (" Press to login ");
           if (btnIsPressed()){
             if (!waitBtnRls) {
-               gameState = GS_FingerPrint;
-               loginState = getCode;
-               waitBtnRls = 1;
+              rsp = mesageFingerp(0);
+              gameState  = GS_FingerPrint;
+              loginState = getCode;
+              waitBtnRls = 1;
             }
           }
           else {
@@ -121,16 +124,21 @@ void Lcd_Meniu() {
           lcd.print ("Enter your code:");
           lcd.setCursor (0, 1);
           lcd.print ("(1-39)   ");
-          static uint8_t rsp;
           rsp = mesageFingerp(1);
           lcd.print (rsp & 0x7F);
           lcd.print ("           ");
+          if (rsp == 0x80) { // cancel
+            rsp        = mesageFingerp(0);
+            user       = 0;
+            loginState = guest;
+            gameState  = GS_Meniu;
+          }
           if (rsp > 0x80) {
+            rsp        = mesageFingerp(0);
             user       = rsp & 0x7F;
             gameState  = GS_Meniu;
             loginState = logged;
-            authState  = authed;
-            rsp        = mesageFingerp(0);
+            authState  = deleting;
           }
           break;
         case logged:
@@ -142,7 +150,7 @@ void Lcd_Meniu() {
           lcd.print ("Press to log out");
           if (btnIsPressed()) {
             if (!waitBtnRls) {
-              user = 0;
+              user       = 0;
               loginState = guest;
               authState  = notAuth;
               waitBtnRls = 1;
@@ -162,9 +170,10 @@ void Lcd_Meniu() {
           lcd.print ("PressTo register");
           if (btnIsPressed()){
             if (!waitBtnRls) {
-               gameState = GS_FingerPrint;
-               authState = setCode;
-               waitBtnRls = 1;
+              rsp = mesageFingerp(0);
+              gameState = GS_FingerPrint;
+              authState = setCode;
+              waitBtnRls = 1;
             }
           }
           else {
@@ -173,7 +182,6 @@ void Lcd_Meniu() {
           }
           break;
         case setCode:
-          static uint8_t rsp;
           rsp = mesageFingerp(2);
           lcd.setCursor (0, 0);
           lcd.print ("Enter your code:");
@@ -181,30 +189,75 @@ void Lcd_Meniu() {
           lcd.print ("(1-39)   ");
           lcd.print (rsp & 0x7F);
           lcd.print ("           ");
+          if (rsp == 0x80) { // cancel
+            Serial.println("Auth Canceled");
+            rsp       = mesageFingerp(0);
+            user      = 0;
+            authState = notAuth;
+            gameState = GS_Meniu;
+          }
           if (rsp > 0x80) {
+            rsp        = mesageFingerp(0);
             user       = rsp & 0x7F;
             gameState  = GS_Meniu;
-            authState  = authed;
+            meniuState = MS_Login;
             loginState = logged;
-            rsp        = mesageFingerp(0);
+            authState  = deleting;
           }
           break;
-        case authed:
+        case deleting:
           lcd.setCursor (0, 0);
           lcd.print ("Logged is as ");
           lcd.print (user);
           lcd.print ("    ");
           lcd.setCursor (0, 1);
-          lcd.print ("Press to log out");
-          if (btnIsPressed()) {
+          if (btnIsPressed()){
             if (!waitBtnRls) {
-              user       = 0;
-              authState  = notAuth;
-              loginState = guest;
-              waitBtnRls = 1;
+              if (lastBtnValue == !pressed) {
+                startCountDown = millis();
+                lastBtnValue   = pressed;
+                lockedMeniu    = true;
+                lcd.print ("Delete User in 3"); // wait 3s
+                break;
+              }
+              if (millis() > startCountDown + 3000) { // done waiting
+                if (mesageFingerp(0x80 | user) == 0x82) { // user successfully deleted
+                  user        = 0;
+                  lockedMeniu = false;
+                  loginState  = guest;
+                  authState   = notAuth;
+                  waitBtnRls  = 1;
+                }
+                else {
+                  lcd.setCursor (0, 1);
+                  lcd.print ("Hold to tryAgain");
+                }
+                
+              }
+              else {
+                lcd.setCursor (15, 1);
+                if (millis() > startCountDown + 2000) { // wait 1s
+                  lcd.print (1);
+                }
+                else {
+                  if (millis() > startCountDown + 1000) { // wait 2s
+                    lcd.print (2);
+                  }
+                }
+              }
+            }
+            else {
+              lcd.print ("Press to delete ");
+              lockedMeniu  = false;
+              lastBtnValue = !pressed;
             }
           }
-          else {waitBtnRls = 0;}
+          else {
+            lcd.print ("Press to delete ");
+            waitBtnRls   = false;
+            lockedMeniu  = false;
+            lastBtnValue = !pressed;
+          }
           break;
         default: authState = notAuth; break;
       }
