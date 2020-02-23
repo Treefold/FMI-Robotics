@@ -62,13 +62,8 @@ void deta () {
 
 void receiveData() {
   radio.read (&msg, sizeof(Msg));
-  if (msg.id == '1') { // state = controler
-    if ((msg.nr & 0x80 && msg.nr & 0x7F)) {
-      msg.nr = 0x80 | joystickState();
-    }
-    else {
-      deta();
-    }
+  if (msg.id == '1' && msg.nr & 0x80) { // state = controler
+    msg.nr = 0x80 | joystickState(); // mark with 0x1------- as a valit message
   }
   else {msg.id = msg.nr = 0;}
   radio.writeAckPayload(1, &msg, sizeof(Msg));
