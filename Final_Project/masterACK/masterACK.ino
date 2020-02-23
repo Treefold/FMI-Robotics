@@ -40,7 +40,7 @@ enum MeniuState : uint8_t {
   MS_InfoGit,
   MS_InfoRobotics,
   MS_LastState   // link to the next of the first state
-} meniuState = MS_Bri;// MS_Start;
+} meniuState = MS_Start;
 
 enum {
   logIn,
@@ -68,7 +68,7 @@ byte addresses[][6] = {"SSlve", "SMstr", "1Slve", "1Mstr", "2Slve", "2Mstr"};
 struct Msg {uint8_t id, nr;} msg;
 
 uint8_t mesageFingerp(uint8_t st) {
-  // while (radio.available()) {radio.read (&msg, sizeof(Msg));}
+  while (radio.available()) {radio.read (&msg, sizeof(Msg));}
   msg.id = 'S';
   msg.nr = st;
   radio.openWritingPipe(addresses[0]);

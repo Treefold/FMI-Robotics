@@ -312,7 +312,7 @@ void Lcd_Meniu() {
       lcd.print (bri);
       if (bri == 0)  {lcd.print ("min");}
       if (bri == 15) {lcd.print ("MAX");}
-      lcd.print ("   ");
+      lcd.print ("     ");
       if (btnIsPressed()) {
         if (lastBtnValue == !pressed) {
           lockedMeniu  = !lockedMeniu;
