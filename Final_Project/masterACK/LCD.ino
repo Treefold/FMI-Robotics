@@ -143,7 +143,7 @@ void Lcd_Meniu() {
           break;
         case logged:
           lcd.setCursor (0, 0);
-          lcd.print ("Logged is as ");
+          lcd.print ("Logged in as ");
           lcd.print (user);
           lcd.print ("    ");
           lcd.setCursor (0, 1);
@@ -186,11 +186,10 @@ void Lcd_Meniu() {
           lcd.setCursor (0, 0);
           lcd.print ("Enter your code:");
           lcd.setCursor (0, 1);
-          lcd.print ("(1-39)   ");
+          lcd.print ("(1-32)   ");
           lcd.print (rsp & 0x7F);
           lcd.print ("           ");
           if (rsp == 0x80) { // cancel
-            Serial.println("Auth Canceled");
             rsp       = mesageFingerp(0);
             user      = 0;
             authState = notAuth;
@@ -207,7 +206,7 @@ void Lcd_Meniu() {
           break;
         case deleting:
           lcd.setCursor (0, 0);
-          lcd.print ("Logged is as ");
+          lcd.print ("Logged in as ");
           lcd.print (user);
           lcd.print ("    ");
           lcd.setCursor (0, 1);
@@ -286,7 +285,6 @@ void Lcd_Meniu() {
         lastBtnValue = !pressed;
       }
       if (lockedMeniu) {
-        Serial.print(vryValue);
         if (vryValue == down) {
           if (lastVryValue != down) {
             if (level > 0) {--level;}
@@ -298,6 +296,48 @@ void Lcd_Meniu() {
             if (lastVryValue != up) {
               if (level < MAX_LVL) {++level;}
               lastVryValue = up;
+            }
+          }
+          else {
+            lastVryValue = neutral;
+          }
+        }
+      }
+      break;
+    case MS_Bri:
+      lcd.setCursor (0, 0);
+      lcd.print ((lockedMeniu) ? ">Press To UnLock" : ">Press To Lock  ");
+      lcd.setCursor (0, 1);
+      lcd.print ("Brightness ");
+      lcd.print (bri);
+      if (bri == 0)  {lcd.print ("min");}
+      if (bri == 15) {lcd.print ("MAX");}
+      lcd.print ("   ");
+      if (btnIsPressed()) {
+        if (lastBtnValue == !pressed) {
+          lockedMeniu  = !lockedMeniu;
+          lastBtnValue = pressed;
+          lastVrxValue = vrxValue;
+          lastVryValue = vryValue;
+        }
+      }
+      else {
+        lastBtnValue = !pressed;
+      }
+      if (lockedMeniu) {
+        if (vryValue == down) {
+          if (lastVryValue != down) {
+            if (bri > 0) {--bri;}
+            lastVryValue = down;
+            setBrightness (bri);
+          }
+        }
+        else {
+          if (vryValue == up) {
+            if (lastVryValue != up) {
+              if (bri < 15) {++bri;}
+              lastVryValue = up;
+              setBrightness (bri);
             }
           }
           else {
