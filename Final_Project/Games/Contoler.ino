@@ -51,8 +51,6 @@ uint8_t joystickState () {
   return state;
 }
 
-
-
 void att () {
   attachInterrupt (digitalPinToInterrupt (incomingDataPin), receiveData, LOW);
 }
@@ -62,8 +60,20 @@ void deta () {
 
 void receiveData() {
   radio.read (&msg, sizeof(Msg));
-  if (msg.id == '1' && msg.nr & 0x80) { // state = controler
-    msg.nr = 0x80 | joystickState(); // mark with 0x1------- as a valit message
+  if (msg.id == '1') { // state = controler
+    if (msg.nr == 0x80){msg.nr = 0x80 | joystickState();} // mark with 0x1------- as a valit message
+    else {
+      if ((msg.nr & 0xC0) == 0xC0) {
+        if (msg.nr & 0x20) {msg.nr = 0xC0 | matrix_brightness;}
+        else {
+          matrix_brightness = msg.nr & (0x0F);
+          lc.setIntensity(0, matrix_brightness);
+          msg.nr = 0xE0 | matrix_brightness;
+        }
+      }
+      else {msg.id = msg.nr = 0;}
+      
+    }
   }
   else {msg.id = msg.nr = 0;}
   radio.writeAckPayload(1, &msg, sizeof(Msg));
@@ -84,5 +94,6 @@ void setup() {
 }
 
 void loop() {
-  Matrix_InGame();
+  if (isInGame) {Matrix_InGame();}
+  else          {Matrix_Animate();}
 }

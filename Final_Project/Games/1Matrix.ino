@@ -13,6 +13,7 @@ static const uint8_t matrix_dinPin     = 5;
 static const uint8_t matrixNo          = 1;
 static LedControl    lc                = LedControl(matrix_dinPin, matrix_clkPin, matrix_csPin, matrixNo); //DIN, CLK, LOAD, No. DRIVER
 uint8_t              matrix_brightness = 5;
+bool                 isInGame          = false;
 
 void Matrix_Init () {
   lc.setIntensity(0, matrix_brightness); // sets brightness (0~14 possible values)
@@ -49,24 +50,24 @@ void Matrix_Animate() {
   static uint64_t next  = 0,
                   now;
   static uint8_t  animation[][8] = { // MatirxPrint prints colums so animation [0][0] is the first column of the first animation
-    { 0b10101100,
-      0b01001110,
-      0b10101011,
-      0b00001001,
-      0b00001001,
-      0b01001011,
-      0b10101110,
-      0b01001100
+    { 0b00110101,
+      0b01110010,
+      0b11010101,
+      0b10010000,
+      0b10010000,
+      0b11010010,
+      0b01110101,
+      0b00110010
     },
 
-    { 0b01001100,
-      0b10101110,
-      0b01001011,
-      0b00001001,
-      0b00001001,
-      0b10101011,
-      0b01001110,
-      0b10101100
+    { 0b00110010,
+      0b01110101,
+      0b11010010,
+      0b10010000,
+      0b10010000,
+      0b11010101,
+      0b01110010,
+      0b00110101
     }
   };
 
@@ -166,13 +167,13 @@ void Matrix_InGame() {
     if (remTime >= (now - nextMove + nextMoveDebounce[level]) * 1.0 / 1000) {
       remTime -= (now - nextMove + nextMoveDebounce[level]) * 1.0 / 1000; // update remaining time
     }
-    //else {if (level != MAX_LVL){gameState = GS_EndGame; return;}} // the last level has no time limit
+    else {if (level != MAX_LVL){isInGame = false; return;}} // the last level has no time limit
     if (cols[head] & (1 << playerPos)) { // collision
       if (lives > 0) {
         lives -= 1;
       }
-      // else {gameState = GS_EndGame; return;}
-      obsToNextLvl    = nextObsToNextLvl[level] + COLS / obsDist; // restart level
+      else {isInGame = false; return;}
+      obsToNextLvl = nextObsToNextLvl[level] + COLS / obsDist; // restart level
       for (uint8_t col = 0; col < COLS; col += obsDist) { // Clear matrix of obstacles
         cols[col] = 0b00000000;
       }
