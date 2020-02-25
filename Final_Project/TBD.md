@@ -4,3 +4,4 @@ Delete (user): Highscore isn't updated
 FingerPrint: Sometimes fingerprint id = 0 is accepted
 Radio: too many fault messages
 Duo end Message: Specify who has won
+Hardware: One joystick misses one wire (the one for y axes)
