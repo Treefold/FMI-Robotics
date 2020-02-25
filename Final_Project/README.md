@@ -58,3 +58,14 @@ Instructions:
  *End of the Game*
    
         -  if you are loggedin and you are playing solo than the highscore is updated, else it is not
+        
+BOM (Bill of Materials):
+        - 4 arduino (1 uno + 3 nano)
+        - 4 radio trancereceiver (nrf24L01+)
+        - 2 "8x8" matrix moduls (+ 8x8 matrixes)
+        - 2 joysticks
+        - 1 fingerprint sensor (r305/r307)
+        - 1 numapad
+        - 1 lcd screen with I2C (4 pins)
+        * 4 roker switches + batteries if you don't to always keep them pluged in
+   
