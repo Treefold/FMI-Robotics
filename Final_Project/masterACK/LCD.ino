@@ -1,24 +1,3 @@
-#define NAME_LEN 8
-#define MAX_LVL  10
-#define LCD_COLS 16
-bool           lastBtnValue   = !pressed,
-               lockedMeniu    = false, //
-               saveName       = false,
-               waitBtnRls     = false;
-uint16_t       currMsgBit,
-               lastVrxValue   = 0,
-               lastVryValue   = 0;
-const char     endMsg[]       = "Congratulation, you have just died! Press button to continue";
-char           name[NAME_LEN] = "       ";
-int8_t         currLet        = 0,
-               level          = 3,
-               score          = 0;
-uint64_t       currTime,
-               startTime,
-               lastLvlUpTime,
-               startCountDown,
-               lastShown;
-
 static void Lcd_printString (char *str) {
   uint8_t ch = 0;
   while (ch < LCD_COLS && str[ch] != '\0') {
@@ -28,8 +7,6 @@ static void Lcd_printString (char *str) {
     lcd.print (' ');
   }
 }
-
-uint8_t rsp = 0;
 
 void Lcd_Meniu() {
   if (!lockedMeniu) {
@@ -59,7 +36,7 @@ void Lcd_Meniu() {
       lcd.print ("BoringGame Meniu");
       lcd.setCursor (0, 1);
       // check the btn was really pressed
-      if (btnIsPressed()){
+      if (btnIsPressed()) {
         if (!waitBtnRls) {
           if (lastBtnValue == !pressed) {
             startCountDown = millis();
@@ -69,8 +46,56 @@ void Lcd_Meniu() {
             break;
           }
           if (millis() > startCountDown + 3000) { // done waiting
-            //Matrix_GameSetup();
-            gameState  = GS_InGame;
+            while (mesagePlayer1(0x90 | level) != 0x7F);
+            gameState  = GS_InSoloGame;
+            waitBtnRls = true;
+            lcd.clear();
+          }
+          else {
+            lcd.setCursor (10, 1);
+            if (millis() > startCountDown + 2000) { // wait 1s
+              lcd.print (1);
+            }
+            else {
+              if (millis() > startCountDown + 1000) { // wait 2s
+                lcd.print (2);
+              }
+            }
+          }
+        }
+        else {
+          lcd.print (">Press to start ");
+          lockedMeniu  = false;
+          lastBtnValue = !pressed;
+        }
+      }
+      else {
+        lcd.print (">Press to start ");
+        waitBtnRls   = false;
+        lockedMeniu  = false;
+        lastBtnValue = !pressed;
+      }
+      break;
+    case MS_StartDual:
+      lcd.setCursor (0, 0);
+      lcd.print ("MultiBoring Game");
+      lcd.setCursor (0, 1);
+      // check the btn was really pressed
+      if (btnIsPressed()) {
+        if (!waitBtnRls) {
+          if (lastBtnValue == !pressed) {
+            startCountDown = millis();
+            lastBtnValue   = pressed;
+            lockedMeniu    = true;
+            lcd.print (">Start in 3      "); // wait 3s
+            break;
+          }
+          if (millis() > startCountDown + 3000) { // done waiting
+            setBrightness1 (bri);
+            setBrightness2 (bri);
+            while (mesagePlayer1(0x90 | level) != 0x7F);
+            while (mesagePlayer2(0x90 | level) != 0x7F);
+            gameState  = GS_InDualGame;
             waitBtnRls = true;
             lcd.clear();
           }
@@ -104,9 +129,9 @@ void Lcd_Meniu() {
         case guest:
           lcd.setCursor (0, 0);
           lcd.print ("You are a guest!");
-          lcd.setCursor(0,1);
+          lcd.setCursor(0, 1);
           lcd.print (" Press to login ");
-          if (btnIsPressed()){
+          if (btnIsPressed()) {
             if (!waitBtnRls) {
               rsp = mesageFingerp(0);
               gameState  = GS_FingerPrint;
@@ -123,7 +148,7 @@ void Lcd_Meniu() {
           lcd.setCursor (0, 0);
           lcd.print ("Enter your code:");
           lcd.setCursor (0, 1);
-          lcd.print ("(1-39)   ");
+          lcd.print ("(1-32)   ");
           rsp = mesageFingerp(1);
           lcd.print (rsp & 0x7F);
           lcd.print ("           ");
@@ -156,7 +181,9 @@ void Lcd_Meniu() {
               waitBtnRls = 1;
             }
           }
-          else {waitBtnRls = 0;}
+          else {
+            waitBtnRls = 0;
+          }
           break;
         default: loginState = guest; break;
       }
@@ -166,9 +193,9 @@ void Lcd_Meniu() {
         case notAuth:
           lcd.setCursor (0, 0);
           lcd.print ("You are a guest!");
-          lcd.setCursor(0,1);
+          lcd.setCursor(0, 1);
           lcd.print ("PressTo register");
-          if (btnIsPressed()){
+          if (btnIsPressed()) {
             if (!waitBtnRls) {
               rsp = mesageFingerp(0);
               gameState = GS_FingerPrint;
@@ -210,7 +237,7 @@ void Lcd_Meniu() {
           lcd.print (user);
           lcd.print ("    ");
           lcd.setCursor (0, 1);
-          if (btnIsPressed()){
+          if (btnIsPressed()) {
             if (!waitBtnRls) {
               if (lastBtnValue == !pressed) {
                 startCountDown = millis();
@@ -231,7 +258,7 @@ void Lcd_Meniu() {
                   lcd.setCursor (0, 1);
                   lcd.print ("Hold to tryAgain");
                 }
-                
+
               }
               else {
                 lcd.setCursor (15, 1);
@@ -287,14 +314,18 @@ void Lcd_Meniu() {
       if (lockedMeniu) {
         if (vryValue == down) {
           if (lastVryValue != down) {
-            if (level > 0) {--level;}
+            if (level > 0) {
+              --level;
+            }
             lastVryValue = down;
           }
         }
         else {
           if (vryValue == up) {
             if (lastVryValue != up) {
-              if (level < MAX_LVL) {++level;}
+              if (level < MAX_LVL) {
+                ++level;
+              }
               lastVryValue = up;
             }
           }
@@ -310,8 +341,12 @@ void Lcd_Meniu() {
       lcd.setCursor (0, 1);
       lcd.print ("Brightness ");
       lcd.print (bri);
-      if (bri == 0)  {lcd.print ("min");}
-      if (bri == 15) {lcd.print ("MAX");}
+      if (bri == 0)  {
+        lcd.print ("min");
+      }
+      if (bri == 15) {
+        lcd.print ("MAX");
+      }
       lcd.print ("     ");
       if (btnIsPressed()) {
         if (lastBtnValue == !pressed) {
@@ -327,17 +362,23 @@ void Lcd_Meniu() {
       if (lockedMeniu) {
         if (vryValue == down) {
           if (lastVryValue != down) {
-            if (bri > 0) {--bri;}
+            if (bri > 0) {
+              --bri;
+            }
             lastVryValue = down;
-            setBrightness (bri);
+            setBrightness1 (bri);
+            setBrightness2 (bri, false);
           }
         }
         else {
           if (vryValue == up) {
             if (lastVryValue != up) {
-              if (bri < 15) {++bri;}
+              if (bri < 15) {
+                ++bri;
+              }
               lastVryValue = up;
-              setBrightness (bri);
+              setBrightness1 (bri);
+              setBrightness2 (bri, false);
             }
           }
           else {
@@ -380,7 +421,9 @@ void Lcd_Meniu() {
         else {
           if (vryValue == up) {
             if (lastVryValue != up) {
-              if (rank > 0) {--rank;}
+              if (rank > 0) {
+                --rank;
+              }
               lastVryValue = up;
             }
           }
@@ -410,54 +453,94 @@ void Lcd_Meniu() {
       break;
     case MS_LastState:  meniuState = (MeniuState) ((int) MS_FirstState + 1); break;
     case MS_FirstState: meniuState = (MeniuState) ((int) MS_LastState  - 1); break;
-    default:            meniuState = (MeniuState) ((int) MS_FirstState + 1); break; 
+    default:            meniuState = (MeniuState) ((int) MS_FirstState + 1); break;
   }
 }
 
-void Lcd_EndGame() {
+void Lcd_EndSoloGame() {
   lcd.setCursor (0, 0);
   lcd.print ("Lvl:");
-  //if (level < 10) {lcd.print (" ");} // only one digit
-  //lcd.print (level);
+  if (level < 10) {
+    lcd.print (" "); // only one digit
+  }
+  lcd.print (level);
   lcd.print (" Score:");
-  //if (score < 100) {lcd.print (" ");} // less than 3 digits
- // lcd.print (score);
- // if (score < 10) { lcd.print (" ");} // only one digit
+  if (score < 100) {
+    lcd.print (" "); // less than 3 digits
+  }
+  lcd.print (score);
+  if (score < 10) {
+    lcd.print (" "); // only one digit
+  }
   lcd.setCursor (0, 1);
-  if (millis() > lastShown + 500) { // refresh rate
+  if (millis() > lastShown + 750) { // refresh rate
     lastShown = millis();
-    if (endMsg[currMsgBit] == '\0') {currMsgBit = 0;} // reprint the message
+    if (endMsg[currMsgBit] == '\0') {
+      currMsgBit = 0; // reprint the message
+    }
     Lcd_printString ((char*)endMsg + (currMsgBit++));
   }
-  if (btnIsPressed()) {
-    if (!waitBtnRls) {
+  if (btnIsPressed  ()) {
+    if (!waitBtnRls  ) {
       waitBtnRls = true;
       //if (score > HS_Read(HS_NO - 1)) { // last rank
-        //saveName   = false;
-        //gameState  = GS_Hs;
+      //saveName   = false;
+      //gameState  = GS_Hs;
       //}
-     // else {
-        gameState  = GS_Meniu;
-        meniuState = MS_Start;
-     //}
+      // else {
+      gameState  = GS_Meniu;
+      meniuState = MS_Start;
+      //}
     }
   }
-  else {waitBtnRls = false;}
+  else {
+    waitBtnRls = false;
+  }
 }
 
-void Lcd_InGame() {
+void Lcd_InSoloGame  () {
   lcd.setCursor (0, 0);
-  //lcd.print ("Lives: ");lcd.print (lives);
- // lcd.print (" Lvl: "); lcd.print (level);
+  lcd.print ("Lives: "); lcd.print (lives);
+  lcd.print (" Lvl: "); lcd.print (level);
   lcd.setCursor (0, 1);
   lcd.print ("TIME: ");
-  //if (level < MAX_LVL) {
-    //if ((uint16_t) remTime < 10) {lcd.print (" ");}
-    //lcd.print ((uint16_t) remTime);
-  //}
- // else {lcd.print ("INF");}
+  if (level < MAX_LVL) {
+    if (remTime < 10) {
+      lcd.print (" ");
+    }
+    lcd.print (remTime);
+  }
+  else {
+    lcd.print ("INF");
+  }
   lcd.print (" SC: ");
-  //lcd.print (score);
+  lcd.print (score);
+}
+
+void Lcd_PrintScore (uint8_t lives, uint8_t level, uint8_t score, uint8_t remTime) {
+  lcd.print ("Hp");
+  lcd.print(lives);
+  lcd.print("Lvl");
+  if (level == 10) {lcd.print ("Inf");}
+  else {
+    lcd.print (" ");
+    lcd.print (level);
+    lcd.print (" ");    
+  }
+  lcd.print ("S");
+  if (score  < 10) {lcd.print(" ");}
+  lcd.print (score);
+  if (score  < 100) {lcd.print(" ");}
+  lcd.print ("T");
+  lcd.print (remTime);
+  lcd.print ("  ");
+}
+
+void Lcd_InDualGame  () {
+  lcd.setCursor (0, 0);
+  Lcd_PrintScore (lives, level, score, remTime);
+  lcd.setCursor (0, 1);
+  Lcd_PrintScore (lives2, level2, score2, remTime2);
 }
 
 void Lcd_HsSaveName() {
@@ -468,9 +551,11 @@ void Lcd_HsSaveName() {
       lcd.print (name[currCh]);
       lcd.print ('<');
     }
-    else {lcd.print (name[currCh]);}
+    else {
+      lcd.print (name[currCh]);
+    }
   }
-  
+
   lcd.setCursor (0, 1);
   if (btnIsPressed()) {
     if (!waitBtnRls) {
@@ -482,7 +567,7 @@ void Lcd_HsSaveName() {
         lastBtnValue   = pressed;
       }
       if (millis() > startCountDown + 3000) {
-       //HS_Update (score, name);
+        //HS_Update (score, name);
         gameState   = GS_Meniu;
         meniuState  = MS_Start;
         saveName    = false;
@@ -509,7 +594,7 @@ void Lcd_HsSaveName() {
     lastBtnValue = !pressed;
     lockedMeniu  = false;
   }
-  
+
   if (!lockedMeniu) {
     if (vrxValue == left) {
       if (lastVrxValue != left && vryValue == up && vryValue == down && currLet > 0) {
