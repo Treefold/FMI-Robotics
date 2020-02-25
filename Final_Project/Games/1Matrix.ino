@@ -13,29 +13,13 @@ static const uint8_t matrix_dinPin     = 5;
 static const uint8_t matrixNo          = 1;
 static LedControl    lc                = LedControl(matrix_dinPin, matrix_clkPin, matrix_csPin, matrixNo); //DIN, CLK, LOAD, No. DRIVER
 uint8_t              matrix_brightness = 5;
-bool                 isInGame          = false;
+bool                 isInGame          = false,
+                     sad               = false;
 
 void Matrix_Init () {
   lc.setIntensity(0, matrix_brightness); // sets brightness (0~14 possible values)
   lc.clearDisplay(0); // clear screen
   lc.shutdown(0, false); // turn off power saving, enables display
-}
-
-uint8_t Matrix_UpdateBrightness (bool sig) {
-  if (sig) {
-    if (matrix_brightness >= MAX_BRI) {
-      return MAX_BRI;
-    }
-    ++matrix_brightness;
-  }
-  else {
-    if (matrix_brightness == 1) {
-      return 1;
-    }
-    --matrix_brightness;
-  }
-  lc.setIntensity(0, matrix_brightness); // sets brightness (0~14 possible values)
-  return matrix_brightness;
 }
 
 static void Print (uint8_t mat[COLS], uint8_t firstCol) {
@@ -50,7 +34,7 @@ void Matrix_Animate() {
   static uint64_t next  = 0,
                   now;
   static uint8_t  animation[][8] = { // MatirxPrint prints colums so animation [0][0] is the first column of the first animation
-    { 0b00110101,
+    { 0b00110101, // happy 1
       0b01110010,
       0b11010101,
       0b10010000,
@@ -60,7 +44,7 @@ void Matrix_Animate() {
       0b00110010
     },
 
-    { 0b00110010,
+    { 0b00110010, // happy 2
       0b01110101,
       0b11010010,
       0b10010000,
@@ -68,13 +52,33 @@ void Matrix_Animate() {
       0b11010101,
       0b01110010,
       0b00110101
+    },
+    
+    { 0b10000101, // sad 1
+      0b11000010,
+      0b10100101,
+      0b10010000,
+      0b10010000,
+      0b10100010,
+      0b11000101,
+      0b10000010
+    },
+
+    { 0b10000010, // sad 2
+      0b11000101,
+      0b10100010,
+      0b10010000,
+      0b10010000,
+      0b10100101,
+      0b11000010,
+      0b10000101
     }
   };
 
   now = millis();
   if (now >= next) {
     next = now + 100; // delay 0.1s
-    Print (animation[state], 0);
+    Print (animation[2 * sad + state], 0);
     state = !state;
   }
 }
@@ -136,11 +140,11 @@ static uint8_t        cols[COLS],   // matrix kept as a circular list of columns
        obsToNextLvl; // current number of obstacles to pass to advance to the next level
 static uint64_t       now,          // the current time
        nextMove;     // the time when the matrix has to refresh
-uint16_t              score = 0;    // the current score
-uint8_t               lives,        // number of remaining lives (no more than 9)
-                      level = 0;    // current level
-float                 remTime,      // the remaining time to finish the current level
-                      sc;           // score
+uint8_t               score   = 0,    // the current score
+                      lives   = 4,    // number of remaining lives (no more than 10); lives = 0 <=> you are dead
+                      level   = 4;    // current level
+float                 remTime = 30,   // the remaining time to finish the current level
+                      sc;             // score
 
 // called before running Matrix_InGame to set/reset the game variables
 void Matrix_GameSetup ()
@@ -149,8 +153,10 @@ void Matrix_GameSetup ()
   for (uint8_t col = 0; col < COLS; ++col) {
     cols[col] = 0b00000000; // clear matrix
   }
+  randomSeed(analogRead(A7));
+  sad          = false;
   head         = 0;
-  lives        = 3; // reset lives
+  lives        = 4; // reset lives
   playerPos    = 4; // reset player position to be in the middle of the first collumn
   score        = 0; // reset dysplayed score
   sc           = 0; // reset current score
@@ -167,12 +173,10 @@ void Matrix_InGame() {
     if (remTime >= (now - nextMove + nextMoveDebounce[level]) * 1.0 / 1000) {
       remTime -= (now - nextMove + nextMoveDebounce[level]) * 1.0 / 1000; // update remaining time
     }
-    else {if (level != MAX_LVL){isInGame = false; return;}} // the last level has no time limit
+    else {if (level != MAX_LVL){isInGame = false; return;}} // att() the last level has no time limit
     if (cols[head] & (1 << playerPos)) { // collision
-      if (lives > 0) {
-        lives -= 1;
-      }
-      else {isInGame = false; return;}
+      lives -= 1;
+      if (lives == 0) {isInGame = false; return;} // att()
       obsToNextLvl = nextObsToNextLvl[level] + COLS / obsDist; // restart level
       for (uint8_t col = 0; col < COLS; col += obsDist) { // Clear matrix of obstacles
         cols[col] = 0b00000000;
@@ -190,7 +194,7 @@ void Matrix_InGame() {
       else {
         if (level < MAX_LVL) {
           level++;
-          if (lives < 9) {
+          if (lives < 10) {
             lives++; // number of lives should be only a digit
           }
         }

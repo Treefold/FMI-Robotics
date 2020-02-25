@@ -29,3 +29,38 @@ bool Js_btnIsPressed() {
           && digitalRead (js_btnPin) == js_btnPressed
           && digitalRead (js_btnPin) == js_btnPressed);
 }
+
+
+uint8_t joystickState () {
+  // state = 0x000byyxx where:
+  // b = button state: 0 - not pressed, 1 - pressed
+  // yy = 00 - nothing, 01 - up,   10 - down
+  // xx = 00 - nothing, 01 - left, 10 - right
+  uint16_t state = 0,
+           x     = analogRead   (A1),
+           y     = analogRead   (A0),
+           btn   = !digitalRead (3);
+  if (x > 767) { // left
+    state |= (1);
+  }
+  else { 
+    if (x < 256) { // right
+      state |= (2);
+    }
+    // else not modified
+  }
+  
+  if (y > 767) { // up
+    state |= (1) << 2;
+  }
+  else { 
+    if (y < 256) { // down
+      state |= (2) << 2;
+    }
+    // else not modified
+  }
+      
+  state |= (btn) << 4; 
+
+  return state;
+}
