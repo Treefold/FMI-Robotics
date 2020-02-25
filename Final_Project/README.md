@@ -2,7 +2,7 @@ Game idea: "Flappy Bird"/"Jetpack Joyride" where the player flies while you pres
 
         The game objective is to evade as many obstacles as possible.
         BUT the game purpuse is to make you have fun while challanging your limits.
-Video: <TBD>
+Video: https://youtu.be/ckyo8kmy1Cs
 
 Instructions:
 
@@ -57,7 +57,7 @@ Instructions:
                     
  *End of the Game*
    
-        -  if you are loggedin and you are playing solo than the highscore is updated, else it is not
+        -  if you are loggedin when you remain out of lives in a solo game than the highscore is updated, else it is not
         
 BOM (Bill of Materials):
 
