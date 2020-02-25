@@ -154,13 +154,13 @@ void Lcd_Meniu() {
           lcd.print ("           ");
           if (rsp == 0x80) { // cancel
             rsp        = mesageFingerp(0);
-            user       = 0;
+            userId     = 0;
             loginState = guest;
             gameState  = GS_Meniu;
           }
           if (rsp > 0x80) {
             rsp        = mesageFingerp(0);
-            user       = rsp & 0x7F;
+            userId     = rsp & 0x7F;
             gameState  = GS_Meniu;
             loginState = logged;
             authState  = deleting;
@@ -169,13 +169,13 @@ void Lcd_Meniu() {
         case logged:
           lcd.setCursor (0, 0);
           lcd.print ("Logged in as ");
-          lcd.print (user);
+          lcd.print (userId);
           lcd.print ("    ");
           lcd.setCursor (0, 1);
           lcd.print ("Press to log out");
           if (btnIsPressed()) {
             if (!waitBtnRls) {
-              user       = 0;
+              userId     = 0;
               loginState = guest;
               authState  = notAuth;
               waitBtnRls = 1;
@@ -218,14 +218,24 @@ void Lcd_Meniu() {
           lcd.print ("           ");
           if (rsp == 0x80) { // cancel
             rsp       = mesageFingerp(0);
-            user      = 0;
+            userId    = 0;
+            
             authState = notAuth;
             gameState = GS_Meniu;
           }
           if (rsp > 0x80) {
-            rsp        = mesageFingerp(0);
-            user       = rsp & 0x7F;
-            gameState  = GS_Meniu;
+            rsp       = mesageFingerp(0);
+            userId    = rsp & 0x7F;
+            gameState = GS_Meniu;
+            lockedMeniu    = true;
+            authState = naming;
+            saveName  = true;
+            strncpy (name, "           ", NAME_LEN);
+          }
+          break;
+        case naming:
+          Lcd_SaveName();
+          if (!saveName) {
             meniuState = MS_Login;
             loginState = logged;
             authState  = deleting;
@@ -234,7 +244,7 @@ void Lcd_Meniu() {
         case deleting:
           lcd.setCursor (0, 0);
           lcd.print ("Logged in as ");
-          lcd.print (user);
+          lcd.print (userId);
           lcd.print ("    ");
           lcd.setCursor (0, 1);
           if (btnIsPressed()) {
@@ -247,8 +257,8 @@ void Lcd_Meniu() {
                 break;
               }
               if (millis() > startCountDown + 3000) { // done waiting
-                if (mesageFingerp(0x80 | user) == 0x82) { // user successfully deleted
-                  user        = 0;
+                if (mesageFingerp(0x80 | userId) == 0x82) { // user successfully deleted
+                  userId      = 0;
                   lockedMeniu = false;
                   loginState  = guest;
                   authState   = notAuth;
@@ -388,19 +398,24 @@ void Lcd_Meniu() {
       }
       break;
     case MS_Hs:
-      static uint8_t rank = 0;
-      char   nameHS[NAME_LEN];
+      static uint8_t rank = 1;
+      static User    usr;
+      usr.id = GetIdByRank(rank);
       lcd.setCursor (0, 0);
       lcd.print ((lockedMeniu) ? ">Press To UnLock" : ">Press To Lock  ");
       lcd.setCursor (0, 1);
       lcd.print ("HS");
-      lcd.print (rank + 1);
-      lcd.print (":           ");
-      lcd.setCursor (5, 1);
-      //lcd.print (HS_Read(rank));
-      lcd.print ("-");
-      //NAME_Read(nameHS, rank);
-      //Lcd_printString (nameHS);
+      lcd.print (rank);
+      if (usr.id == 0) {lcd.print (": 0 - NOTSET ");}
+      else {
+        EEPROM_GetUser (usr);
+        // PrintUser (usr);
+        lcd.print (": ");
+        lcd.print (usr.score);
+        lcd.print ("-");
+        lcd.print (usr.name);
+        lcd.print ("           ");
+      }
 
       if (btnIsPressed()) {
         if (lastBtnValue == !pressed) {
@@ -414,14 +429,14 @@ void Lcd_Meniu() {
       if (lockedMeniu) {
         if (vryValue == down) {
           if (lastVryValue != down) {
-            //if (rank < HS_NO - 1) {++rank;}
+            if (rank < RANKERS_NO ) {++rank;}
             lastVryValue = down;
           }
         }
         else {
           if (vryValue == up) {
             if (lastVryValue != up) {
-              if (rank > 0) {
+              if (rank > 1) {
                 --rank;
               }
               lastVryValue = up;
@@ -481,16 +496,19 @@ void Lcd_EndSoloGame() {
     Lcd_printString ((char*)endMsg + (currMsgBit++));
   }
   if (btnIsPressed  ()) {
-    if (!waitBtnRls  ) {
+    if (!waitBtnRls) {
       waitBtnRls = true;
-      //if (score > HS_Read(HS_NO - 1)) { // last rank
-      //saveName   = false;
-      //gameState  = GS_Hs;
-      //}
-      // else {
+      if (userId != 0 && score > GetScoreById (userId)) {
+        SetScoreById (userId, score);
+      }
+      uint8_t r = RANKERS_NO;
+      while (score > GetScoreByRank(r) && r > 0) {
+        SetIdByRank (r+1, GetIdByRank(r));
+        --r;
+      }
+      SetIdByRank (r+1, userId);
       gameState  = GS_Meniu;
       meniuState = MS_Start;
-      //}
     }
   }
   else {
@@ -543,9 +561,9 @@ void Lcd_InDualGame  () {
   Lcd_PrintScore (lives2, level2, score2, remTime2);
 }
 
-void Lcd_HsSaveName() {
+void Lcd_SaveName() {
   lcd.setCursor (6, 0);
-  for (uint8_t currCh = 0; currCh < NAME_LEN - 1; ++currCh) { // -1 for the last char is '\0'
+  for (uint8_t currCh = 0; currCh < NAME_LEN; ++currCh) {
     if (currCh == currLet) {
       lcd.print ('>');
       lcd.print (name[currCh]);
@@ -563,11 +581,13 @@ void Lcd_HsSaveName() {
         lcd.setCursor (0, 1);
         lcd.print (">Name saved in 3");
         startCountDown = millis();
-        lockedMeniu    = true;
         lastBtnValue   = pressed;
       }
       if (millis() > startCountDown + 3000) {
-        //HS_Update (score, name);
+        User usr(userId);
+        strcpy (usr.name, name);
+        EEPROM_SetUser (usr);
+        
         gameState   = GS_Meniu;
         meniuState  = MS_Start;
         saveName    = false;
@@ -605,8 +625,8 @@ void Lcd_HsSaveName() {
     }
     else {
       if (vrxValue == right) {
-        if (lastVrxValue != right && vryValue == up && vryValue == down && currLet < NAME_LEN - 2) {
-          // -2 for each: the last one is '\0' and cannot move to the right letter if there are no more letters
+        if (lastVrxValue != right && vryValue == up && vryValue == down && currLet < NAME_LEN - 1) {
+          // -1: the last one is '\0' and cannot move to the right letter if there are no more letters
           currLet++;
           lastVrxValue = right;
           lastVryValue = neutral;

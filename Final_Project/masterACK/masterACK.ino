@@ -12,39 +12,50 @@
 #define down    1
 #define up      2
 #define pressed 1
-#define NAME_LEN 8
 #define MAX_LVL  10
 #define LCD_COLS 16
+#define SCORE_LEN   1
+#define NAME_LEN    7
 
-PIN cePin           = 9, // rf24 cip enable
-    csnPin          = 8, // rf24 cip select not
-    incomingDataPin = 2; // rf24 interrupt signal
+struct User {
+  uint8_t id, 
+          score;
+  char    name [NAME_LEN + 1]; // the '\0' isn't saved
 
-uint8_t    vrxValue = neutral,
-           vryValue = neutral,
-           user     = 0,
-           bri      = 3,
-           rsp      = 0;
-bool       btnValue = !pressed,
-           lastBtnValue   = !pressed,
-           lockedMeniu    = false, //
-           saveName       = false,
-           waitBtnRls     = false;
+  User (uint8_t _id = 0) {
+    id = _id;
+    score = 0;
+  }
+};
+
+PIN cePin               = 9, // rf24 cip enable
+    csnPin              = 8, // rf24 cip select not
+    incomingDataPin     = 2; // rf24 interrupt signal
+
+uint8_t    vrxValue     = neutral,
+           vryValue     = neutral,
+           userId       = 0,
+           bri          = 3,
+           rsp          = 0;
+bool       btnValue     = !pressed,
+           lastBtnValue = !pressed,
+           lockedMeniu  = false, //
+           saveName     = false,
+           waitBtnRls   = false;
 uint16_t   currMsgBit,
-           lastVrxValue   = 0,
-           lastVryValue   = 0;
-const char endMsg[]       = "Congratulation, you have just died! Press button to continue";
-char       name[NAME_LEN] = "       ";
-int8_t     currLet        = 0,
-           level          = 3,
-           score          = 0,
-           lives          = 3,
-           remTime        = 0,
-           currLet2       = 0,
-           level2         = 3,
-           score2         = 0,
-           lives2         = 3,
-           remTime2       = 0;
+           lastVrxValue = 0,
+           lastVryValue = 0;
+const char endMsg[]     = "Congratulation, you have just died! Press button to continue";
+int8_t     currLet      = 0,
+           level        = 3,
+           score        = 0,
+           lives        = 3,
+           remTime      = 0,
+           currLet2     = 0,
+           level2       = 3,
+           score2       = 0,
+           lives2       = 3,
+           remTime2     = 0;
 uint64_t   currTime,
            startTime,
            lastLvlUpTime,
@@ -91,6 +102,7 @@ enum {
 enum {
   notAuth,
   setCode,
+  naming,
   deleting
 } authState = notAuth;
 
@@ -143,7 +155,7 @@ uint8_t mesagePlayer1(uint8_t st, uint8_t id = '1') {
       return msg.nr;
     }
   } else {
-    Serial.println("Sending to Controler1 failed");  // If no ack response, sending failed
+    //Serial.println("Sending to Controler1 failed");  // If no ack response, sending failed
   }
   return 0; // fault
 }
@@ -166,7 +178,7 @@ uint8_t mesagePlayer2(uint8_t st, uint8_t id = '2') {
       return msg.nr;
     }
   } else {
-    Serial.println("Sending to Controler2 failed");  // If no ack response, sending failed
+    //Serial.println("Sending to Controler2 failed");  // If no ack response, sending failed
   }
   return 0; // fault
 }
@@ -253,6 +265,7 @@ bool getGameData2() { // max 10 ms if it's on
 }
 
 void setup() {
+  // EEPROM_Clean();
   Serial.begin(9600);
   Serial.println("start");
   lcd.begin(16, 2);
@@ -270,6 +283,8 @@ void setup() {
   lcd.print ("JoystickNotFound");
   lcd.setCursor (0, 1);
   lcd.print ("Please try again");
+  User u (1);
+  PrintUser (u);
   setBrightness1 (bri); // this also signals that the controler shoudn't be in "game mode";
   setBrightness2 (bri, false); // try to stop the second one
 }
